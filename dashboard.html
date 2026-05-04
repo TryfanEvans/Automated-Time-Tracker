@@ -1,0 +1,1167 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activity Tracker</title>
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --bg: #f7f6f3;
+            --surface: #ffffff;
+            --surface2: #f0efe9;
+            --border: rgba(0, 0, 0, 0.09);
+            --border2: rgba(0, 0, 0, 0.16);
+            --text: #1a1a18;
+            --text2: #6b6b66;
+            --text3: #9b9b95;
+            --mono: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+            --r: 8px;
+            --rl: 12px;
+            --ws-c: #185FA5;
+            --ws-b: #deeefb;
+            --read-c: #0F6E56;
+            --read-b: #d4eedd;
+            --reddit-c: #E84422;
+            --reddit-b: #fde8e3;
+            --yt-c: #CC0000;
+            --yt-b: #ffe0e0;
+            --fb-c: #1877F2;
+            --fb-b: #deeaff;
+            --ig-c: #833AB4;
+            --ig-b: #f0e6fc;
+            --tw-c: #1DA1F2;
+            --tw-b: #e0f4ff;
+            --tt-c: #000000;
+            --tt-b: #e8e8e8;
+            --browse-c: #5F5E5A;
+            --browse-b: #f1efe8;
+            --msg-c: #085041;
+            --msg-b: #c2eed9;
+            --admin-c: #854F0B;
+            --admin-b: #faeeda;
+            --ent-c: #533AB7;
+            --ent-b: #eeedfe;
+            --news-c: #3B6D11;
+            --news-b: #eaf3de;
+            --disc-c: #5865F2;
+            --disc-b: #eaebff;
+            --oth-c: #9b9b95;
+            --oth-b: #f1efe8;
+            --meal-c: #633806;
+            --meal-b: #fde0a6;
+            --sleep-c: #444441;
+            --sleep-b: #dddbd0;
+        }
+
+        @media (prefers-color-scheme:dark) {
+            :root {
+                --bg: #141412;
+                --surface: #1e1e1c;
+                --surface2: #272724;
+                --border: rgba(255, 255, 255, 0.07);
+                --border2: rgba(255, 255, 255, 0.14);
+                --text: #f0efe9;
+                --text2: #9b9b95;
+                --text3: #6b6b66;
+                --ws-b: #0c2a45;
+                --read-b: #073020;
+                --reddit-b: #3a1008;
+                --yt-b: #3a0000;
+                --fb-b: #0a1e50;
+                --ig-b: #2a1040;
+                --tw-b: #062030;
+                --tt-b: #1a1a1a;
+                --browse-b: #2c2c2a;
+                --msg-b: #041c14;
+                --admin-b: #2e1c04;
+                --ent-b: #1e1850;
+                --news-b: #182808;
+                --disc-b: #1a1d50;
+                --oth-b: #2c2c2a;
+                --meal-b: #2a1600;
+                --sleep-b: #222220;
+            }
+        }
+
+        body {
+            font-family: var(--mono);
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 1.5rem 1rem 3rem;
+        }
+
+        .wrap {
+            max-width: 780px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 1.25rem;
+        }
+
+        h1 {
+            font-size: 18px;
+            font-weight: 500;
+            letter-spacing: -0.2px;
+        }
+
+        .sub {
+            font-size: 11px;
+            color: var(--text3);
+            margin-top: 2px;
+        }
+
+        .hbtns {
+            display: flex;
+            gap: 6px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .stat {
+            background: var(--surface2);
+            border-radius: var(--r);
+            padding: 11px 13px;
+        }
+
+        .sl {
+            font-size: 10px;
+            color: var(--text3);
+            letter-spacing: .05em;
+            margin-bottom: 3px;
+        }
+
+        .sv {
+            font-size: 22px;
+            font-weight: 500;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .su {
+            font-size: 11px;
+            color: var(--text2);
+            font-weight: 400;
+        }
+
+        .card {
+            background: var(--surface);
+            border: .5px solid var(--border);
+            border-radius: var(--rl);
+            margin-bottom: 10px;
+            overflow: hidden;
+        }
+
+        .ch {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 9px 14px;
+            border-bottom: .5px solid var(--border);
+            font-size: 10px;
+            color: var(--text3);
+            letter-spacing: .06em;
+        }
+
+        .chr {
+            font-size: 12px;
+            color: var(--text2);
+            letter-spacing: 0;
+        }
+
+        .wi {
+            padding: 11px 14px 14px;
+        }
+
+        .wm {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: var(--text3);
+            margin-bottom: 6px;
+        }
+
+        .bt {
+            height: 7px;
+            background: var(--surface2);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .bf {
+            height: 100%;
+            background: var(--text);
+            border-radius: 4px;
+            transition: width .4s;
+        }
+
+        .cb {
+            padding: 11px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+        }
+
+        .cr {
+            display: grid;
+            grid-template-columns: 120px 1fr 46px;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .cn {
+            font-size: 11px;
+            color: var(--text2);
+            text-align: right;
+        }
+
+        .cbt {
+            height: 7px;
+            background: var(--surface2);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .cbf {
+            height: 100%;
+            border-radius: 4px;
+        }
+
+        .ch2 {
+            font-size: 11px;
+            color: var(--text);
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: .5px solid var(--border);
+            padding: 0 14px;
+        }
+
+        .tab {
+            padding: 8px 10px 7px;
+            font-size: 11px;
+            color: var(--text3);
+            cursor: pointer;
+            border-bottom: 1.5px solid transparent;
+            margin-bottom: -.5px;
+            transition: color .15s;
+        }
+
+        .tab:hover {
+            color: var(--text2);
+        }
+
+        .tab.active {
+            color: var(--text);
+            border-bottom-color: var(--text);
+        }
+
+        .fr {
+            display: grid;
+            grid-template-columns: 46px 100px 1fr 46px 22px;
+            gap: 8px;
+            padding: 9px 14px;
+            border-bottom: .5px solid var(--border);
+            font-size: 11px;
+            align-items: center;
+            transition: background .1s;
+        }
+
+        .fr:last-child {
+            border-bottom: none;
+        }
+
+        .fr:hover {
+            background: var(--surface2);
+        }
+
+        .ft {
+            color: var(--text3);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .fi {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            color: var(--text2);
+        }
+
+        .fd {
+            color: var(--text3);
+            text-align: right;
+        }
+
+        .db {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text3);
+            font-size: 14px;
+            line-height: 1;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+
+        .db:hover {
+            color: var(--text);
+            background: var(--surface2);
+        }
+
+        .tag {
+            display: inline-block;
+            font-size: 9px;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: 600;
+            letter-spacing: .04em;
+            white-space: nowrap;
+        }
+
+        .dot {
+            display: inline-block;
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            margin-right: 4px;
+            vertical-align: middle;
+            flex-shrink: 0;
+        }
+
+        .fb {
+            padding: 13px 14px;
+        }
+
+        .fg {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .ff {
+            grid-column: 1/-1;
+        }
+
+        .fl {
+            font-size: 10px;
+            color: var(--text3);
+            letter-spacing: .04em;
+            margin-bottom: 4px;
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            height: 33px;
+            padding: 0 9px;
+            border: .5px solid var(--border2);
+            border-radius: var(--r);
+            background: var(--surface2);
+            color: var(--text);
+            font-size: 12px;
+            font-family: var(--mono);
+            outline: none;
+            transition: border-color .15s;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            border-color: var(--text3);
+        }
+
+        textarea {
+            height: 54px;
+            padding: 8px 9px;
+            resize: none;
+        }
+
+        .brow {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn {
+            height: 32px;
+            padding: 0 16px;
+            border: .5px solid var(--border2);
+            border-radius: var(--r);
+            background: var(--text);
+            color: var(--bg);
+            font-size: 12px;
+            font-family: var(--mono);
+            cursor: pointer;
+            transition: opacity .15s;
+            white-space: nowrap;
+        }
+
+        .btn:hover {
+            opacity: .85;
+        }
+
+        .btn:active {
+            opacity: .7;
+        }
+
+        .btn-g {
+            background: transparent;
+            color: var(--text2);
+        }
+
+        .btn-g:hover {
+            color: var(--text);
+            opacity: 1;
+        }
+
+        .empty {
+            padding: 2rem;
+            text-align: center;
+            color: var(--text3);
+            font-size: 12px;
+        }
+
+        .sbar {
+            font-size: 10px;
+            color: var(--text3);
+            text-align: right;
+            padding: 6px 0 0;
+            letter-spacing: .04em;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            background: var(--text);
+            color: var(--bg);
+            padding: 8px 16px;
+            border-radius: var(--r);
+            font-size: 12px;
+            font-family: var(--mono);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity .25s;
+            z-index: 999;
+        }
+
+        .toast.show {
+            opacity: 1;
+        }
+
+        /* ── Activity button ──────────────────────────────────────────────────────── */
+        .act-start-btn {
+            background: var(--text);
+            color: var(--bg);
+        }
+
+        .act-end-btn {
+            background: #A32D2D;
+            color: #fff;
+            border-color: #A32D2D;
+        }
+
+        .act-end-btn:hover {
+            opacity: .85;
+        }
+
+        .act-running {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 0 2px;
+        }
+
+        .act-note-label {
+            font-size: 11px;
+            color: var(--text3);
+        }
+
+        /* pulse dot while active */
+        .act-running::before {
+            content: '';
+            display: inline-block;
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #A32D2D;
+            animation: pulse 1.4s ease-in-out infinite;
+            flex-shrink: 0;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: .4;
+                transform: scale(.85);
+            }
+        }
+
+        /* ── Timeline ──────────────────────────────────────────────────────────────── */
+        .tl-wrap {
+            padding: 12px 14px 14px;
+        }
+
+        .tl-outer {
+            position: relative;
+            margin-bottom: 6px;
+        }
+
+        .tl-track {
+            position: relative;
+            height: 32px;
+            background: var(--surface2);
+            border-radius: 4px;
+            overflow: hidden;
+            cursor: default;
+        }
+
+        .tl-block {
+            position: absolute;
+            top: 0;
+            height: 100%;
+            border-radius: 2px;
+            opacity: .9;
+            transition: opacity .1s;
+            cursor: default;
+        }
+
+        .tl-block:hover {
+            opacity: 1;
+        }
+
+        .tl-gap {
+            position: absolute;
+            top: 0;
+            height: 100%;
+            background: transparent;
+            border-left: 1px dashed var(--border2);
+            border-right: 1px dashed var(--border2);
+            cursor: pointer;
+            transition: background .1s;
+        }
+
+        .tl-gap:hover {
+            background: rgba(128, 128, 128, 0.08);
+        }
+
+        .tl-gap:hover::after {
+            content: '+ fill';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 9px;
+            color: var(--text3);
+            white-space: nowrap;
+            pointer-events: none;
+        }
+
+        /* Hour ticks */
+        .tl-ticks {
+            position: relative;
+            height: 16px;
+        }
+
+        .tl-tick {
+            position: absolute;
+            transform: translateX(-50%);
+            font-size: 9px;
+            color: var(--text3);
+            white-space: nowrap;
+            user-select: none;
+        }
+
+        /* Tooltip */
+        .tl-tip {
+            position: fixed;
+            background: var(--text);
+            color: var(--bg);
+            font-size: 10px;
+            padding: 4px 9px;
+            border-radius: 5px;
+            pointer-events: none;
+            z-index: 900;
+            opacity: 0;
+            transition: opacity .15s;
+            white-space: nowrap;
+        }
+
+        .tl-tip.show {
+            opacity: 1;
+        }
+
+        /* ── Retroactive popup ─────────────────────────────────────────────────────── */
+        .popup-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.25);
+            z-index: 800;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .popup-overlay.show {
+            display: flex;
+        }
+
+        .popup {
+            background: var(--surface);
+            border: .5px solid var(--border2);
+            border-radius: var(--rl);
+            padding: 16px 18px;
+            width: 320px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+        }
+
+        .popup-title {
+            font-size: 12px;
+            font-weight: 500;
+            margin-bottom: 12px;
+            color: var(--text);
+        }
+
+        .popup-range {
+            font-size: 11px;
+            color: var(--text3);
+            margin-bottom: 12px;
+        }
+
+        .popup-row {
+            margin-bottom: 10px;
+        }
+
+        .popup-btns {
+            display: flex;
+            gap: 8px;
+            margin-top: 14px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrap">
+        <header>
+            <div>
+                <h1>activity tracker</h1>
+                <div class="sub" id="last-up">connecting…</div>
+            </div>
+            <div class="hbtns">
+                <button class="btn btn-g" onclick="exportCSV(7)">export 7d</button>
+                <button class="btn btn-g" onclick="exportCSV(30)">export 30d</button>
+            </div>
+        </header>
+
+        <div class="stats">
+            <div class="stat">
+                <div class="sl">TODAY</div>
+                <div class="sv" id="s-today">—<span class="su">h</span></div>
+            </div>
+            <div class="stat">
+                <div class="sl">THIS WEEK</div>
+                <div class="sv" id="s-week">—<span class="su">h</span></div>
+            </div>
+            <div class="stat">
+                <div class="sl">GOAL</div>
+                <div class="sv">20<span class="su">h/wk</span></div>
+            </div>
+            <div class="stat">
+                <div class="sl">MANUAL TODAY</div>
+                <div class="sv" id="s-manual">—</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="ch">WEEKLY PROGRESS <span class="chr" id="wlabel">0 / 20h</span></div>
+            <div class="wi">
+                <div class="wm"><span>0h</span><span id="wpct">0%</span><span>20h</span></div>
+                <div class="bt">
+                    <div class="bf" id="wbar" style="width:0%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Timeline -->
+        <div class="card">
+            <div class="ch">TODAY'S TIMELINE <span class="chr" id="tl-label">—</span></div>
+            <div class="tl-wrap">
+                <div class="tl-outer">
+                    <div class="tl-track" id="tl-track"></div>
+                    <div class="tl-ticks" id="tl-ticks"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="ch">ACTIVITY <span class="chr" id="act-timer"></span></div>
+            <div class="fb">
+                <!-- idle state -->
+                <div id="act-idle">
+                    <div style="display:flex;gap:8px;align-items:center">
+                        <button class="btn act-start-btn" onclick="startActivity()">▶ start activity</button>
+                        <input type="text" id="m-cat" placeholder="running, meal, reading…" style="flex:1">
+                    </div>
+                </div>
+                <!-- active state (hidden until started) -->
+                <div id="act-active" style="display:none">
+                    <div class="act-running">
+                        <span id="act-label-tag"></span>
+                    </div>
+                    <div class="brow" style="margin-top:12px">
+                        <button class="btn act-end-btn" onclick="endActivity()">■ end activity</button>
+                        <button class="btn btn-g" onclick="cancelActivity()">cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="ch">TODAY BY CATEGORY <span class="chr" id="today-tot">—</span></div>
+            <div class="cb" id="cat-bars">
+                <div class="empty">no data yet</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="tabs">
+                <div class="tab active" onclick="switchTab('today',this)">today</div>
+                <div class="tab" onclick="switchTab('week',this)">this week</div>
+            </div>
+            <div id="feed">
+                <div class="empty">loading…</div>
+            </div>
+        </div>
+
+        <div class="sbar" id="sbar">—</div>
+    </div>
+
+    <!-- Retroactive popup -->
+    <div class="popup-overlay" id="popup-overlay" onclick="closePopup(event)">
+        <div class="popup">
+            <div class="popup-title">fill in gap</div>
+            <div class="popup-range" id="popup-range">—</div>
+            <div class="popup-row">
+                <div class="fl">CATEGORY</div>
+                <select id="p-cat"></select>
+            </div>
+            <div class="popup-row">
+                <div class="fl">DURATION (MINUTES)</div>
+                <input type="number" id="p-dur" min="1" max="720">
+            </div>
+            <div class="popup-row">
+                <div class="fl">NOTE (OPTIONAL)</div>
+                <input type="text" id="p-note" placeholder="optional note">
+            </div>
+            <div class="popup-btns">
+                <button class="btn btn-g" onclick="closePopup()">cancel</button>
+                <button class="btn" onclick="submitPopup()">+ log entry</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="tl-tip" id="tl-tip"></div>
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // ── Styles ────────────────────────────────────────────────────────────────────
+        const STYLES = {
+            "Work/Study": { c: "var(--ws-c)", b: "var(--ws-b)" },
+            "Reading": { c: "var(--read-c)", b: "var(--read-b)" },
+            "Reddit": { c: "var(--reddit-c)", b: "var(--reddit-b)" },
+            "YouTube": { c: "var(--yt-c)", b: "var(--yt-b)" },
+            "Facebook": { c: "var(--fb-c)", b: "var(--fb-b)" },
+            "Instagram": { c: "var(--ig-c)", b: "var(--ig-b)" },
+            "Twitter": { c: "var(--tw-c)", b: "var(--tw-b)" },
+            "TikTok": { c: "var(--tt-c)", b: "var(--tt-b)" },
+            "Browsing": { c: "var(--browse-c)", b: "var(--browse-b)" },
+            "Messaging": { c: "var(--msg-c)", b: "var(--msg-b)" },
+            "Admin": { c: "var(--admin-c)", b: "var(--admin-b)" },
+            "Entertainment": { c: "var(--ent-c)", b: "var(--ent-b)" },
+            "News": { c: "var(--news-c)", b: "var(--news-b)" },
+            "Discord": { c: "var(--disc-c)", b: "var(--disc-b)" },
+            "Other": { c: "var(--oth-c)", b: "var(--oth-b)" },
+            "Meal": { c: "var(--meal-c)", b: "var(--meal-b)" },
+            "Sleep": { c: "var(--sleep-c)", b: "var(--sleep-b)" },
+        };
+        function cs(cat) { return STYLES[cat] || STYLES["Other"]; }
+        function tag(cat) { const t = cs(cat); return `<span class="tag" style="background:${t.b};color:${t.c}">${cat}</span>`; }
+        function toast(m) { const e = document.getElementById('toast'); e.textContent = m; e.classList.add('show'); setTimeout(() => e.classList.remove('show'), 2200); }
+        function hhmm(d) { return new Date(d).toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit', hour12: false }); }
+
+        let currentTab = 'today';
+        let allCats = [];
+        let popupTs = null; // ISO string for retroactive entry start time
+
+        async function get(url) { const r = await fetch(url); return r.json(); }
+
+        // ── Stats / bars ──────────────────────────────────────────────────────────────
+        function renderStats(st) {
+            const t = st.totals;
+            document.getElementById('s-today').innerHTML = `${t.today_h}<span class="su">h</span>`;
+            document.getElementById('s-week').innerHTML = `${t.week_h}<span class="su">h</span>`;
+            document.getElementById('s-manual').textContent = t.manual_today;
+            const pct = Math.min(100, Math.round((t.week_h / t.week_goal) * 100));
+            document.getElementById('wbar').style.width = pct + '%';
+            document.getElementById('wpct').textContent = pct + '%';
+            document.getElementById('wlabel').textContent = `${t.week_h} / ${t.week_goal}h`;
+            renderBars(st.today, t.today_h);
+        }
+
+        function renderBars(cats, total) {
+            document.getElementById('today-tot').textContent = `${total}h`;
+            const el = document.getElementById('cat-bars');
+            if (!cats || !cats.length) { el.innerHTML = '<div class="empty">no data today yet</div>'; return; }
+            const max = Math.max(...cats.map(c => c.hours), 0.01);
+            el.innerHTML = cats.map(c => {
+                const st = cs(c.category);
+                const pct = Math.round((c.hours / max) * 100);
+                return `<div class="cr">
+      <span class="cn">${c.category}</span>
+      <div class="cbt"><div class="cbf" style="width:${pct}%;background:${st.c}"></div></div>
+      <span class="ch2">${c.hours}h</span>
+    </div>`;
+            }).join('');
+        }
+
+        // ── Feed ──────────────────────────────────────────────────────────────────────
+        function renderFeed(events) {
+            const el = document.getElementById('feed');
+            if (!events.length) { el.innerHTML = '<div class="empty">no events yet</div>'; return; }
+            el.innerHTML = events.map(e => {
+                const time = hhmm(e.ts);
+                const dur = e.duration_s < 60 ? `${Math.round(e.duration_s)}s` : `${Math.round(e.duration_s / 60)}m`;
+                const dotC = e.source === 'auto' ? cs(e.category).c : 'var(--text3)';
+                const label = e.source === 'manual' ? (e.note || e.category) : (e.title || e.app || '—');
+                return `<div class="fr">
+      <span class="ft">${time}</span>
+      <span>${tag(e.category)}</span>
+      <span class="fi"><span class="dot" style="background:${dotC}"></span>${label}</span>
+      <span class="fd">${dur}</span>
+      <button class="db" onclick="del(${e.id},this)" title="delete">×</button>
+    </div>`;
+            }).join('');
+        }
+
+        function switchTab(tab, el) {
+            currentTab = tab;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            el.classList.add('active');
+            get(`/api/events?days=${tab === 'today' ? 1 : 7}`).then(renderFeed);
+        }
+
+        // ── Timeline ──────────────────────────────────────────────────────────────────
+        const tip = document.getElementById('tl-tip');
+
+        function showTip(text, x, y) {
+            tip.textContent = text;
+            tip.style.left = (x + 10) + 'px';
+            tip.style.top = (y - 28) + 'px';
+            tip.classList.add('show');
+        }
+        function hideTip() { tip.classList.remove('show'); }
+
+        async function renderTimeline() {
+            const blocks = await get('/api/timeline');
+            const track = document.getElementById('tl-track');
+            const ticks = document.getElementById('tl-ticks');
+
+            const now = new Date();
+            const midnight = new Date(now); midnight.setHours(0, 0, 0, 0);
+            const spanMs = now - midnight;
+
+            if (!spanMs) { return; }
+
+            // Build segments list: block objects + gap objects
+            const segs = [];
+            let cursor = midnight.getTime();
+            const GAP_MIN = 2 * 60 * 1000; // only show gaps > 2 min
+
+            for (const b of blocks) {
+                const bStart = new Date(b.start).getTime();
+                const bEnd = new Date(b.end).getTime();
+                // Clamp to today's range
+                const s2 = Math.max(bStart, midnight.getTime());
+                const e2 = Math.min(bEnd, now.getTime());
+                if (e2 <= midnight.getTime()) continue;
+
+                if (s2 - cursor > GAP_MIN) {
+                    segs.push({ type: 'gap', start: cursor, end: s2 });
+                }
+                if (e2 > s2) {
+                    segs.push({ type: 'block', cat: b.category, start: s2, end: e2 });
+                }
+                cursor = Math.max(cursor, e2);
+            }
+            // Trailing gap to now
+            if (now.getTime() - cursor > GAP_MIN) {
+                segs.push({ type: 'gap', start: cursor, end: now.getTime() });
+            }
+
+            // Render blocks + gaps
+            track.innerHTML = segs.map(seg => {
+                const left = ((seg.start - midnight) / spanMs * 100).toFixed(3);
+                const width = ((seg.end - seg.start) / spanMs * 100).toFixed(3);
+                if (seg.type === 'gap') {
+                    const s = new Date(seg.start).toISOString();
+                    const e = new Date(seg.end).toISOString();
+                    const durMin = Math.round((seg.end - seg.start) / 60000);
+                    return `<div class="tl-gap"
+        style="left:${left}%;width:${Math.max(width, 0.3)}%"
+        data-start="${s}" data-end="${e}" data-dur="${durMin}"
+        onmouseenter="showTip('${hhmm(s)} – ${hhmm(e)} · ${durMin}m gap',event.clientX,event.clientY)"
+        onmousemove="showTip('${hhmm(s)} – ${hhmm(e)} · ${durMin}m gap',event.clientX,event.clientY)"
+        onmouseleave="hideTip()"
+        onclick="openGapPopup(this)"></div>`;
+                } else {
+                    const st = cs(seg.cat);
+                    const durMin = Math.round((seg.end - seg.start) / 60000);
+                    const s = new Date(seg.start).toISOString();
+                    const e = new Date(seg.end).toISOString();
+                    return `<div class="tl-block"
+        style="left:${left}%;width:${Math.max(width, 0.3)}%;background:${st.c}"
+        onmouseenter="showTip('${seg.cat} · ${hhmm(s)} – ${hhmm(e)} · ${durMin}m',event.clientX,event.clientY)"
+        onmousemove="showTip('${seg.cat} · ${hhmm(s)} – ${hhmm(e)} · ${durMin}m',event.clientX,event.clientY)"
+        onmouseleave="hideTip()"></div>`;
+                }
+            }).join('');
+
+            // Hour ticks
+            const tickHtml = [];
+            for (let h = 0; h <= 23; h++) {
+                const tickTime = new Date(midnight); tickTime.setHours(h);
+                if (tickTime > now) break;
+                const left = ((tickTime - midnight) / spanMs * 100).toFixed(2);
+                if (parseFloat(left) > 97) continue; // don't crowd the right edge
+                tickHtml.push(`<span class="tl-tick" style="left:${left}%">${String(h).padStart(2, '0')}</span>`);
+            }
+            ticks.innerHTML = tickHtml.join('');
+
+            // Label: tracked vs total
+            const trackedMs = segs.filter(s => s.type === 'block').reduce((a, s) => a + (s.end - s.start), 0);
+            const trackedH = (trackedMs / 3600000).toFixed(1);
+            document.getElementById('tl-label').textContent = `${trackedH}h tracked`;
+        }
+
+        // ── Gap popup ─────────────────────────────────────────────────────────────────
+        function openGapPopup(el) {
+            const startIso = el.dataset.start;
+            const endIso = el.dataset.end;
+            const durMin = parseInt(el.dataset.dur) || 30;
+            popupTs = startIso;
+
+            document.getElementById('popup-range').textContent =
+                `${hhmm(startIso)} – ${hhmm(endIso)}`;
+            document.getElementById('p-dur').value = durMin;
+            document.getElementById('p-note').value = '';
+
+            // Populate popup category select with all categories
+            const sel = document.getElementById('p-cat');
+            sel.innerHTML = '';
+            allCats.forEach(c => {
+                const o = document.createElement('option');
+                o.value = c; o.textContent = c;
+                sel.appendChild(o);
+            });
+
+            document.getElementById('popup-overlay').classList.add('show');
+        }
+
+        function closePopup(e) {
+            if (e && e.target !== document.getElementById('popup-overlay')) return;
+            document.getElementById('popup-overlay').classList.remove('show');
+            popupTs = null;
+        }
+
+        async function submitPopup() {
+            const cat = document.getElementById('p-cat').value;
+            const dur = parseFloat(document.getElementById('p-dur').value);
+            const note = document.getElementById('p-note').value.trim();
+            if (!dur || dur <= 0) { toast('enter a duration'); return; }
+            const r = await fetch('/api/manual', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ category: cat, duration_s: dur * 60, note, ts: popupTs }),
+            });
+            if ((await r.json()).ok) {
+                document.getElementById('popup-overlay').classList.remove('show');
+                popupTs = null;
+                toast('logged ✓');
+                refresh();
+            }
+        }
+
+        // ── Activity timer ────────────────────────────────────────────────────────────
+        let actStartTs = null;
+        let actTimerInt = null;
+
+        function startTimerTick() {
+            if (actTimerInt) clearInterval(actTimerInt);
+            actTimerInt = setInterval(() => {
+                if (!actStartTs) return;
+                const elapsed = Math.floor((Date.now() - new Date(actStartTs)) / 1000);
+                const m = Math.floor(elapsed / 60);
+                const s = elapsed % 60;
+                document.getElementById('act-timer').textContent =
+                    `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+            }, 1000);
+        }
+
+        async function startActivity() {
+            const raw = document.getElementById('m-cat').value.trim();
+            if (!raw) { toast('enter an activity first'); return; }
+            const cat = raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase();
+            const ts = new Date().toISOString();
+            const r = await fetch('/api/activity/start', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ category: cat, ts }),
+            });
+            if (!(await r.json()).ok) return;
+
+            actStartTs = ts;
+            document.getElementById('act-idle').style.display = 'none';
+            document.getElementById('act-active').style.display = 'block';
+            const st = cs(cat);
+            document.getElementById('act-label-tag').innerHTML =
+                `<span class="tag" style="background:${st.b};color:${st.c}">${cat}</span>`;
+            startTimerTick();
+        }
+
+        async function endActivity() {
+            const r = await fetch('/api/activity/end', { method: 'POST' });
+            const data = await r.json();
+            if (data.ok) {
+                toast(`logged ${Math.round(data.duration_s / 60)}m of ${data.category} ✓`);
+                resetActivity();
+                refresh();
+            }
+        }
+
+        async function cancelActivity() {
+            await fetch('/api/activity/cancel', { method: 'POST' });
+            resetActivity();
+            toast('cancelled');
+        }
+
+        function resetActivity() {
+            actStartTs = null;
+            clearInterval(actTimerInt);
+            actTimerInt = null;
+            document.getElementById('act-idle').style.display = 'block';
+            document.getElementById('act-active').style.display = 'none';
+            document.getElementById('act-timer').textContent = '';
+            document.getElementById('m-cat').value = '';
+        }
+
+        async function checkActivityStatus() {
+            try {
+                const status = await fetch('/api/activity/status').then(r => r.json());
+                if (status.running && !actStartTs) {
+                    // Server thinks activity is running but UI doesn't — resync
+                    actStartTs = status.ts;
+                    document.getElementById('act-idle').style.display = 'none';
+                    document.getElementById('act-active').style.display = 'block';
+                    const st = cs(status.category);
+                    document.getElementById('act-label-tag').innerHTML =
+                        `<span class="tag" style="background:${st.b};color:${st.c}">${status.category}</span>`;
+                    startTimerTick();
+                } else if (!status.running && actStartTs) {
+                    // Server stopped it (auto-stop) — reset UI and notify
+                    if (status.stopped_by === 'auto') {
+                        toast('activity auto-stopped — window switch detected');
+                    }
+                    resetActivity();
+                }
+            } catch (e) { /* server unavailable */ }
+        }
+
+        async function del(id, btn) {
+            btn.closest('.fr').style.opacity = '0.3';
+            await fetch(`/api/delete/${id}`, { method: 'DELETE' });
+            toast('deleted');
+            refresh();
+        }
+
+        function exportCSV(days) { window.location.href = `/api/export?days=${days}`; }
+
+        // ── Refresh ───────────────────────────────────────────────────────────────────
+        async function refresh() {
+            try {
+                const [stats, events] = await Promise.all([
+                    get('/api/stats'),
+                    get(`/api/events?days=${currentTab === 'today' ? 1 : 7}`),
+                ]);
+                renderStats(stats);
+                renderFeed(events);
+                await renderTimeline();
+                await checkActivityStatus();
+                const now = new Date().toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit', hour12: false });
+                document.getElementById('last-up').textContent = `last updated ${now}`;
+                document.getElementById('sbar').textContent = `auto-polling every 30s · ${stats.totals.today_h}h tracked today`;
+            } catch (e) {
+                document.getElementById('last-up').textContent = 'server unavailable — is tracker.py running?';
+            }
+        }
+
+        // ── Init ──────────────────────────────────────────────────────────────────────
+        async function init() {
+            const cats = await get('/api/categories').catch(() => ({
+                auto: ["Work/Study", "Reading", "Reddit", "YouTube", "Facebook", "Instagram", "Twitter", "TikTok", "Browsing", "Messaging", "Admin", "Entertainment", "News", "Discord", "Other"],
+                manual: ["Messaging", "Reading", "Sleep", "Meal", "Admin", "Other"]
+            }));
+
+            // All categories for gap popup (auto + manual, deduped)
+            allCats = [...new Set([...cats.auto, ...cats.manual])];
+
+            // Also allow Enter key to start activity
+            document.getElementById('m-cat').addEventListener('keydown', e => {
+                if (e.key === 'Enter') startActivity();
+            });
+
+            refresh();
+            setInterval(refresh, 30000);
+        }
+
+        // Close popup on Escape
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') document.getElementById('popup-overlay').classList.remove('show');
+        });
+
+        init();
+    </script>
+</body>
+
+</html>
