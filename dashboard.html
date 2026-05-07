@@ -92,34 +92,43 @@
             }
         }
 
+        html,
+        body {
+            height: 100%;
+            overflow: hidden;
+        }
+
         body {
             font-family: var(--mono);
             background: var(--bg);
             color: var(--text);
-            min-height: 100vh;
-            padding: 1.5rem 1rem 3rem;
         }
 
-        .wrap {
-            max-width: 780px;
+        .page {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            max-width: 920px;
             margin: 0 auto;
+            padding: 0.75rem 0.75rem 0;
         }
 
         header {
             display: flex;
             justify-content: space-between;
             align-items: baseline;
-            margin-bottom: 1.25rem;
+            margin-bottom: 8px;
+            flex-shrink: 0;
         }
 
         h1 {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 500;
             letter-spacing: -0.2px;
         }
 
         .sub {
-            font-size: 11px;
+            font-size: 10px;
             color: var(--text3);
             margin-top: 2px;
         }
@@ -129,34 +138,193 @@
             gap: 6px;
         }
 
+        /* Two-column layout below header */
+        .columns {
+            display: flex;
+            flex: 1;
+            min-height: 0;
+            gap: 8px;
+            padding-bottom: 0.75rem;
+        }
+
+        /* ── Vertical timeline ────────────────────────────────────────────────────── */
+        .tl-wrap {
+            display: flex;
+            flex-direction: row;
+            flex-shrink: 0;
+            width: 110px;
+        }
+
+        .tl-labels {
+            width: 22px;
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        .tl-labels-inner {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+        }
+
+        .vtl-tick {
+            position: absolute;
+            right: 4px;
+            font-size: 8px;
+            color: var(--text3);
+            opacity: 0.45;
+            transform: translateY(-50%);
+            user-select: none;
+            text-align: right;
+            line-height: 1;
+            letter-spacing: -0.02em;
+        }
+
+        .tl-bar {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            background: var(--surface);
+            border: .5px solid var(--border);
+            border-radius: var(--rl);
+        }
+
+        .vtl-line {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 0.5px;
+            background: var(--border);
+        }
+
+        .vtl-block {
+            position: absolute;
+            left: 4px;
+            right: 4px;
+            border-radius: 3px;
+            overflow: hidden;
+            cursor: default;
+            transition: opacity .1s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .vtl-block:hover {
+            opacity: 0.85;
+        }
+
+        .vtl-block-label {
+            font-size: 9px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.9);
+            text-align: center;
+            padding: 0 3px;
+            line-height: 1.2;
+            overflow: hidden;
+            word-break: break-word;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            pointer-events: none;
+        }
+
+        .vtl-gap {
+            position: absolute;
+            left: 4px;
+            right: 4px;
+            border-radius: 3px;
+            border: 1px dashed transparent;
+            cursor: pointer;
+            transition: background .1s, border-color .1s;
+            min-height: 4px;
+        }
+
+        .vtl-gap:hover {
+            background: rgba(128, 128, 128, 0.07);
+            border-color: var(--border2);
+        }
+
+        .vtl-gap:hover::after {
+            content: '+';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 10px;
+            color: var(--text3);
+            pointer-events: none;
+        }
+
+        .vtl-future {
+            position: absolute;
+            left: 4px;
+            right: 4px;
+            background: var(--surface2);
+            border-radius: 3px;
+            opacity: 0.4;
+        }
+
+        .vtl-now {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 1.5px;
+            background: var(--text);
+            z-index: 10;
+        }
+
+        .vtl-now::before {
+            content: '';
+            position: absolute;
+            left: 2px;
+            top: -3px;
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--text);
+        }
+
+        /* ── Main column ─────────────────────────────────────────────────────────── */
+        .main-col {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
         .stats {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 8px;
-            margin-bottom: 10px;
+            gap: 6px;
+            margin-bottom: 8px;
+            flex-shrink: 0;
         }
 
         .stat {
             background: var(--surface2);
             border-radius: var(--r);
-            padding: 11px 13px;
+            padding: 9px 11px;
         }
 
         .sl {
-            font-size: 10px;
+            font-size: 9px;
             color: var(--text3);
             letter-spacing: .05em;
-            margin-bottom: 3px;
+            margin-bottom: 2px;
         }
 
         .sv {
-            font-size: 22px;
+            font-size: 18px;
             font-weight: 500;
             font-variant-numeric: tabular-nums;
         }
 
         .su {
-            font-size: 11px;
+            font-size: 10px;
             color: var(--text2);
             font-weight: 400;
         }
@@ -165,41 +333,51 @@
             background: var(--surface);
             border: .5px solid var(--border);
             border-radius: var(--rl);
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .card.feed-card {
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 0;
         }
 
         .ch {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 9px 14px;
+            padding: 8px 12px;
             border-bottom: .5px solid var(--border);
             font-size: 10px;
             color: var(--text3);
             letter-spacing: .06em;
+            flex-shrink: 0;
         }
 
         .chr {
-            font-size: 12px;
+            font-size: 11px;
             color: var(--text2);
             letter-spacing: 0;
         }
 
         .wi {
-            padding: 11px 14px 14px;
+            padding: 10px 12px 12px;
         }
 
         .wm {
             display: flex;
             justify-content: space-between;
-            font-size: 11px;
+            font-size: 10px;
             color: var(--text3);
-            margin-bottom: 6px;
+            margin-bottom: 5px;
         }
 
         .bt {
-            height: 7px;
+            height: 6px;
             background: var(--surface2);
             border-radius: 4px;
             overflow: hidden;
@@ -213,27 +391,27 @@
         }
 
         .cb {
-            padding: 11px 14px;
+            padding: 9px 12px;
             display: flex;
             flex-direction: column;
-            gap: 7px;
+            gap: 6px;
         }
 
         .cr {
             display: grid;
-            grid-template-columns: 120px 1fr 46px;
-            gap: 8px;
+            grid-template-columns: 110px 1fr 42px;
+            gap: 6px;
             align-items: center;
         }
 
         .cn {
-            font-size: 11px;
+            font-size: 10px;
             color: var(--text2);
             text-align: right;
         }
 
         .cbt {
-            height: 7px;
+            height: 6px;
             background: var(--surface2);
             border-radius: 4px;
             overflow: hidden;
@@ -245,7 +423,7 @@
         }
 
         .ch2 {
-            font-size: 11px;
+            font-size: 10px;
             color: var(--text);
             text-align: right;
             font-variant-numeric: tabular-nums;
@@ -254,12 +432,13 @@
         .tabs {
             display: flex;
             border-bottom: .5px solid var(--border);
-            padding: 0 14px;
+            padding: 0 12px;
+            flex-shrink: 0;
         }
 
         .tab {
-            padding: 8px 10px 7px;
-            font-size: 11px;
+            padding: 7px 8px 6px;
+            font-size: 10px;
             color: var(--text3);
             cursor: pointer;
             border-bottom: 1.5px solid transparent;
@@ -276,13 +455,32 @@
             border-bottom-color: var(--text);
         }
 
+        #feed {
+            flex: 1;
+            min-height: 0;
+            overflow-y: auto;
+        }
+
+        #feed::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        #feed::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        #feed::-webkit-scrollbar-thumb {
+            background: var(--border2);
+            border-radius: 2px;
+        }
+
         .fr {
             display: grid;
-            grid-template-columns: 46px 100px 1fr 46px 22px;
-            gap: 8px;
-            padding: 9px 14px;
+            grid-template-columns: 42px 90px 1fr 40px 20px;
+            gap: 6px;
+            padding: 8px 12px;
             border-bottom: .5px solid var(--border);
-            font-size: 11px;
+            font-size: 10px;
             align-items: center;
             transition: background .1s;
         }
@@ -317,15 +515,15 @@
             border: none;
             cursor: pointer;
             color: var(--text3);
-            font-size: 14px;
+            font-size: 13px;
             line-height: 1;
             padding: 0;
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 20px;
-            height: 20px;
-            border-radius: 4px;
+            width: 18px;
+            height: 18px;
+            border-radius: 3px;
         }
 
         .db:hover {
@@ -336,7 +534,7 @@
         .tag {
             display: inline-block;
             font-size: 9px;
-            padding: 2px 6px;
+            padding: 1px 5px;
             border-radius: 3px;
             font-weight: 600;
             letter-spacing: .04em;
@@ -345,47 +543,36 @@
 
         .dot {
             display: inline-block;
-            width: 5px;
-            height: 5px;
+            width: 4px;
+            height: 4px;
             border-radius: 50%;
-            margin-right: 4px;
+            margin-right: 3px;
             vertical-align: middle;
             flex-shrink: 0;
         }
 
         .fb {
-            padding: 13px 14px;
-        }
-
-        .fg {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 10px;
-        }
-
-        .ff {
-            grid-column: 1/-1;
+            padding: 11px 12px;
         }
 
         .fl {
-            font-size: 10px;
+            font-size: 9px;
             color: var(--text3);
             letter-spacing: .04em;
-            margin-bottom: 4px;
+            margin-bottom: 3px;
         }
 
         input,
         select,
         textarea {
             width: 100%;
-            height: 33px;
-            padding: 0 9px;
+            height: 30px;
+            padding: 0 8px;
             border: .5px solid var(--border2);
             border-radius: var(--r);
             background: var(--surface2);
             color: var(--text);
-            font-size: 12px;
+            font-size: 11px;
             font-family: var(--mono);
             outline: none;
             transition: border-color .15s;
@@ -398,24 +585,24 @@
         }
 
         textarea {
-            height: 54px;
-            padding: 8px 9px;
+            height: 48px;
+            padding: 7px 8px;
             resize: none;
         }
 
         .brow {
             display: flex;
-            gap: 8px;
+            gap: 6px;
         }
 
         .btn {
-            height: 32px;
-            padding: 0 16px;
+            height: 30px;
+            padding: 0 14px;
             border: .5px solid var(--border2);
             border-radius: var(--r);
             background: var(--text);
             color: var(--bg);
-            font-size: 12px;
+            font-size: 11px;
             font-family: var(--mono);
             cursor: pointer;
             transition: opacity .15s;
@@ -441,41 +628,12 @@
         }
 
         .empty {
-            padding: 2rem;
+            padding: 1.5rem;
             text-align: center;
             color: var(--text3);
-            font-size: 12px;
+            font-size: 11px;
         }
 
-        .sbar {
-            font-size: 10px;
-            color: var(--text3);
-            text-align: right;
-            padding: 6px 0 0;
-            letter-spacing: .04em;
-        }
-
-        .toast {
-            position: fixed;
-            bottom: 1.5rem;
-            right: 1.5rem;
-            background: var(--text);
-            color: var(--bg);
-            padding: 8px 16px;
-            border-radius: var(--r);
-            font-size: 12px;
-            font-family: var(--mono);
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity .25s;
-            z-index: 999;
-        }
-
-        .toast.show {
-            opacity: 1;
-        }
-
-        /* ── Activity button ──────────────────────────────────────────────────────── */
         .act-start-btn {
             background: var(--text);
             color: var(--bg);
@@ -487,28 +645,18 @@
             border-color: #A32D2D;
         }
 
-        .act-end-btn:hover {
-            opacity: .85;
-        }
-
         .act-running {
             display: flex;
             align-items: center;
-            gap: 10px;
-            padding: 10px 0 2px;
+            gap: 8px;
+            padding: 8px 0 2px;
         }
 
-        .act-note-label {
-            font-size: 11px;
-            color: var(--text3);
-        }
-
-        /* pulse dot while active */
         .act-running::before {
             content: '';
             display: inline-block;
-            width: 7px;
-            height: 7px;
+            width: 6px;
+            height: 6px;
             border-radius: 50%;
             background: #A32D2D;
             animation: pulse 1.4s ease-in-out infinite;
@@ -529,82 +677,6 @@
             }
         }
 
-        /* ── Timeline ──────────────────────────────────────────────────────────────── */
-        .tl-wrap {
-            padding: 12px 14px 14px;
-        }
-
-        .tl-outer {
-            position: relative;
-            margin-bottom: 6px;
-        }
-
-        .tl-track {
-            position: relative;
-            height: 32px;
-            background: var(--surface2);
-            border-radius: 4px;
-            overflow: hidden;
-            cursor: default;
-        }
-
-        .tl-block {
-            position: absolute;
-            top: 0;
-            height: 100%;
-            border-radius: 2px;
-            opacity: .9;
-            transition: opacity .1s;
-            cursor: default;
-        }
-
-        .tl-block:hover {
-            opacity: 1;
-        }
-
-        .tl-gap {
-            position: absolute;
-            top: 0;
-            height: 100%;
-            background: transparent;
-            border-left: 1px dashed var(--border2);
-            border-right: 1px dashed var(--border2);
-            cursor: pointer;
-            transition: background .1s;
-        }
-
-        .tl-gap:hover {
-            background: rgba(128, 128, 128, 0.08);
-        }
-
-        .tl-gap:hover::after {
-            content: '+ fill';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 9px;
-            color: var(--text3);
-            white-space: nowrap;
-            pointer-events: none;
-        }
-
-        /* Hour ticks */
-        .tl-ticks {
-            position: relative;
-            height: 16px;
-        }
-
-        .tl-tick {
-            position: absolute;
-            transform: translateX(-50%);
-            font-size: 9px;
-            color: var(--text3);
-            white-space: nowrap;
-            user-select: none;
-        }
-
-        /* Tooltip */
         .tl-tip {
             position: fixed;
             background: var(--text);
@@ -623,7 +695,6 @@
             opacity: 1;
         }
 
-        /* ── Retroactive popup ─────────────────────────────────────────────────────── */
         .popup-overlay {
             display: none;
             position: fixed;
@@ -643,37 +714,58 @@
             border: .5px solid var(--border2);
             border-radius: var(--rl);
             padding: 16px 18px;
-            width: 320px;
+            width: 300px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
         }
 
         .popup-title {
             font-size: 12px;
             font-weight: 500;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
             color: var(--text);
         }
 
         .popup-range {
             font-size: 11px;
             color: var(--text3);
-            margin-bottom: 12px;
+            margin-bottom: 10px;
         }
 
         .popup-row {
-            margin-bottom: 10px;
+            margin-bottom: 9px;
         }
 
         .popup-btns {
             display: flex;
             gap: 8px;
-            margin-top: 14px;
+            margin-top: 12px;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            background: var(--text);
+            color: var(--bg);
+            padding: 8px 16px;
+            border-radius: var(--r);
+            font-size: 11px;
+            font-family: var(--mono);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity .25s;
+            z-index: 999;
+        }
+
+        .toast.show {
+            opacity: 1;
         }
     </style>
 </head>
 
 <body>
-    <div class="wrap">
+    <div class="page">
+
         <header>
             <div>
                 <h1>activity tracker</h1>
@@ -685,105 +777,101 @@
             </div>
         </header>
 
-        <div class="stats">
-            <div class="stat">
-                <div class="sl">TODAY</div>
-                <div class="sv" id="s-today">—<span class="su">h</span></div>
-            </div>
-            <div class="stat">
-                <div class="sl">THIS WEEK</div>
-                <div class="sv" id="s-week">—<span class="su">h</span></div>
-            </div>
-            <div class="stat">
-                <div class="sl">GOAL</div>
-                <div class="sv">20<span class="su">h/wk</span></div>
-            </div>
-            <div class="stat">
-                <div class="sl">MANUAL TODAY</div>
-                <div class="sv" id="s-manual">—</div>
-            </div>
-        </div>
+        <div class="columns">
 
-        <div class="card">
-            <div class="ch">WEEKLY PROGRESS <span class="chr" id="wlabel">0 / 20h</span></div>
-            <div class="wi">
-                <div class="wm"><span>0h</span><span id="wpct">0%</span><span>20h</span></div>
-                <div class="bt">
-                    <div class="bf" id="wbar" style="width:0%"></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Timeline -->
-        <div class="card">
-            <div class="ch">TODAY'S TIMELINE <span class="chr" id="tl-label">—</span></div>
+            <!-- Timeline: labels + bar side by side -->
             <div class="tl-wrap">
-                <div class="tl-outer">
-                    <div class="tl-track" id="tl-track"></div>
-                    <div class="tl-ticks" id="tl-ticks"></div>
+                <div class="tl-labels">
+                    <div class="tl-labels-inner" id="vtl-labels"></div>
                 </div>
+                <div class="tl-bar" id="tl-bar"></div>
             </div>
-        </div>
 
-        <div class="card">
-            <div class="ch">ACTIVITY <span class="chr" id="act-timer"></span></div>
-            <div class="fb">
-                <!-- idle state -->
-                <div id="act-idle">
-                    <div style="display:flex;gap:8px;align-items:center">
-                        <button class="btn act-start-btn" onclick="startActivity()">▶ start activity</button>
-                        <input type="text" id="m-cat" placeholder="running, meal, reading…" style="flex:1">
+            <!-- Main column -->
+            <div class="main-col">
+
+                <div class="stats">
+                    <div class="stat">
+                        <div class="sl">WORK/STUDY</div>
+                        <div class="sv" id="s-today">—<span class="su">h</span></div>
+                    </div>
+                    <div class="stat">
+                        <div class="sl">THIS WEEK</div>
+                        <div class="sv" id="s-week">—<span class="su">h</span></div>
+                    </div>
+                    <div class="stat">
+                        <div class="sl">GOAL</div>
+                        <div class="sv">20<span class="su">h/wk</span></div>
+                    </div>
+                    <div class="stat">
+                        <div class="sl">MANUAL</div>
+                        <div class="sv" id="s-manual">—</div>
                     </div>
                 </div>
-                <!-- active state (hidden until started) -->
-                <div id="act-active" style="display:none">
-                    <div class="act-running">
-                        <span id="act-label-tag"></span>
-                    </div>
-                    <div class="brow" style="margin-top:12px">
-                        <button class="btn act-end-btn" onclick="endActivity()">■ end activity</button>
-                        <button class="btn btn-g" onclick="cancelActivity()">cancel</button>
+
+                <div class="card">
+                    <div class="ch">WEEKLY PROGRESS <span class="chr" id="wlabel">0 / 20h</span></div>
+                    <div class="wi">
+                        <div class="wm"><span>0h</span><span id="wpct">0%</span><span>20h</span></div>
+                        <div class="bt">
+                            <div class="bf" id="wbar" style="width:0%"></div>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </div>
 
-        <div class="card">
-            <div class="ch">TODAY BY CATEGORY <span class="chr" id="today-tot">—</span></div>
-            <div class="cb" id="cat-bars">
-                <div class="empty">no data yet</div>
-            </div>
-        </div>
+                <div class="card">
+                    <div class="ch">ACTIVITY <span class="chr" id="act-timer"></span></div>
+                    <div class="fb">
+                        <div id="act-idle">
+                            <div style="display:flex;gap:8px;align-items:center">
+                                <button class="btn act-start-btn" onclick="startActivity()">▶ start</button>
+                                <input type="text" id="m-cat" placeholder="running, meal, reading…" style="flex:1">
+                            </div>
+                        </div>
+                        <div id="act-active" style="display:none">
+                            <div class="act-running"><span id="act-label-tag"></span></div>
+                            <div class="brow" style="margin-top:10px">
+                                <button class="btn act-end-btn" onclick="endActivity()">■ end</button>
+                                <button class="btn btn-g" onclick="cancelActivity()">cancel</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-        <div class="card">
-            <div class="tabs">
-                <div class="tab active" onclick="switchTab('today',this)">today</div>
-                <div class="tab" onclick="switchTab('week',this)">this week</div>
-            </div>
-            <div id="feed">
-                <div class="empty">loading…</div>
-            </div>
-        </div>
+                <div class="card">
+                    <div class="ch">TODAY BY CATEGORY <span class="chr" id="today-tot">—</span></div>
+                    <div class="cb" id="cat-bars">
+                        <div class="empty">no data yet</div>
+                    </div>
+                </div>
 
-        <div class="sbar" id="sbar">—</div>
-    </div>
+                <div class="card feed-card">
+                    <div class="tabs">
+                        <div class="tab active" onclick="switchTab('today',this)">today</div>
+                        <div class="tab" onclick="switchTab('week',this)">this week</div>
+                    </div>
+                    <div id="feed">
+                        <div class="empty">loading…</div>
+                    </div>
+                </div>
 
-    <!-- Retroactive popup -->
+            </div><!-- main-col -->
+        </div><!-- columns -->
+    </div><!-- page -->
+
+    <!-- Popup -->
     <div class="popup-overlay" id="popup-overlay" onclick="closePopup(event)">
         <div class="popup">
             <div class="popup-title">fill in gap</div>
             <div class="popup-range" id="popup-range">—</div>
             <div class="popup-row">
-                <div class="fl">CATEGORY</div>
-                <select id="p-cat"></select>
+                <div class="fl">CATEGORY</div><select id="p-cat"></select>
             </div>
             <div class="popup-row">
-                <div class="fl">DURATION (MINUTES)</div>
-                <input type="number" id="p-dur" min="1" max="720">
+                <div class="fl">DURATION (MINUTES)</div><input type="number" id="p-dur" min="1" max="720">
             </div>
             <div class="popup-row">
-                <div class="fl">NOTE (OPTIONAL)</div>
-                <input type="text" id="p-note" placeholder="optional note">
+                <div class="fl">NOTE (OPTIONAL)</div><input type="text" id="p-note" placeholder="optional note">
             </div>
             <div class="popup-btns">
                 <button class="btn btn-g" onclick="closePopup()">cancel</button>
@@ -796,7 +884,6 @@
     <div class="toast" id="toast"></div>
 
     <script>
-        // ── Styles ────────────────────────────────────────────────────────────────────
         const STYLES = {
             "Work/Study": { c: "var(--ws-c)", b: "var(--ws-b)" },
             "Reading": { c: "var(--read-c)", b: "var(--read-b)" },
@@ -816,18 +903,14 @@
             "Meal": { c: "var(--meal-c)", b: "var(--meal-b)" },
             "Sleep": { c: "var(--sleep-c)", b: "var(--sleep-b)" },
         };
-        function cs(cat) { return STYLES[cat] || STYLES["Other"]; }
+        function cs(cat) { return STYLES[cat] || { c: "var(--oth-c)", b: "var(--oth-b)" }; }
         function tag(cat) { const t = cs(cat); return `<span class="tag" style="background:${t.b};color:${t.c}">${cat}</span>`; }
         function toast(m) { const e = document.getElementById('toast'); e.textContent = m; e.classList.add('show'); setTimeout(() => e.classList.remove('show'), 2200); }
         function hhmm(d) { return new Date(d).toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit', hour12: false }); }
 
-        let currentTab = 'today';
-        let allCats = [];
-        let popupTs = null; // ISO string for retroactive entry start time
-
+        let currentTab = 'today', allCats = [], popupTs = null;
         async function get(url) { const r = await fetch(url); return r.json(); }
 
-        // ── Stats / bars ──────────────────────────────────────────────────────────────
         function renderStats(st) {
             const t = st.totals;
             document.getElementById('s-today').innerHTML = `${t.today_h}<span class="su">h</span>`;
@@ -848,15 +931,10 @@
             el.innerHTML = cats.map(c => {
                 const st = cs(c.category);
                 const pct = Math.round((c.hours / max) * 100);
-                return `<div class="cr">
-      <span class="cn">${c.category}</span>
-      <div class="cbt"><div class="cbf" style="width:${pct}%;background:${st.c}"></div></div>
-      <span class="ch2">${c.hours}h</span>
-    </div>`;
+                return `<div class="cr"><span class="cn">${c.category}</span><div class="cbt"><div class="cbf" style="width:${pct}%;background:${st.c}"></div></div><span class="ch2">${c.hours}h</span></div>`;
             }).join('');
         }
 
-        // ── Feed ──────────────────────────────────────────────────────────────────────
         function renderFeed(events) {
             const el = document.getElementById('feed');
             if (!events.length) { el.innerHTML = '<div class="empty">no events yet</div>'; return; }
@@ -865,13 +943,7 @@
                 const dur = e.duration_s < 60 ? `${Math.round(e.duration_s)}s` : `${Math.round(e.duration_s / 60)}m`;
                 const dotC = e.source === 'auto' ? cs(e.category).c : 'var(--text3)';
                 const label = e.source === 'manual' ? (e.note || e.category) : (e.title || e.app || '—');
-                return `<div class="fr">
-      <span class="ft">${time}</span>
-      <span>${tag(e.category)}</span>
-      <span class="fi"><span class="dot" style="background:${dotC}"></span>${label}</span>
-      <span class="fd">${dur}</span>
-      <button class="db" onclick="del(${e.id},this)" title="delete">×</button>
-    </div>`;
+                return `<div class="fr"><span class="ft">${time}</span><span>${tag(e.category)}</span><span class="fi"><span class="dot" style="background:${dotC}"></span>${label}</span><span class="fd">${dur}</span><button class="db" onclick="del(${e.id},this)">×</button></div>`;
             }).join('');
         }
 
@@ -884,282 +956,225 @@
 
         // ── Timeline ──────────────────────────────────────────────────────────────────
         const tip = document.getElementById('tl-tip');
-
-        function showTip(text, x, y) {
-            tip.textContent = text;
-            tip.style.left = (x + 10) + 'px';
-            tip.style.top = (y - 28) + 'px';
-            tip.classList.add('show');
-        }
+        function showTip(text, x, y) { tip.textContent = text; tip.style.left = (x + 12) + 'px'; tip.style.top = (y - 28) + 'px'; tip.classList.add('show'); }
         function hideTip() { tip.classList.remove('show'); }
 
+        // Drop blocks shorter than thresholdMs (absorbing their time into the previous
+        // block), then merge any adjacent same-category blocks.
+        function mergeSmallInterruptions(blocks, thresholdMs) {
+            if (!blocks.length) return blocks;
+
+            // Pass 1: drop tiny blocks, extending the previous block to cover their time
+            const filtered = [];
+            for (const b of blocks) {
+                const dur = new Date(b.end) - new Date(b.start);
+                if (dur < thresholdMs && filtered.length > 0) {
+                    filtered[filtered.length - 1] = { ...filtered[filtered.length - 1], end: b.end };
+                } else {
+                    filtered.push({ ...b });
+                }
+            }
+
+            // Pass 2: merge adjacent same-category blocks
+            const result = [];
+            for (const b of filtered) {
+                const prev = result[result.length - 1];
+                if (prev && prev.category === b.category) {
+                    result[result.length - 1] = { ...prev, end: b.end };
+                } else {
+                    result.push({ ...b });
+                }
+            }
+
+            return result;
+        }
+
         async function renderTimeline() {
-            const blocks = await get('/api/timeline');
-            const track = document.getElementById('tl-track');
-            const ticks = document.getElementById('tl-ticks');
+            const raw = await get('/api/timeline');
+            const MERGE_MS = 5 * 60 * 1000; // 5 minutes
+            const blocks = mergeSmallInterruptions(raw, MERGE_MS);
+            const bar = document.getElementById('tl-bar');
+            const labels = document.getElementById('vtl-labels');
 
             const now = new Date();
             const midnight = new Date(now); midnight.setHours(0, 0, 0, 0);
-            const spanMs = now - midnight;
+            const nowMs = now - midnight;
+            const DAY_MS = 86400000;
 
-            if (!spanMs) { return; }
+            const barH = bar.offsetHeight || window.innerHeight;
 
-            // Build segments list: block objects + gap objects
+            const tickHtml = [], barHtml = [];
+
+            for (let h = 0; h <= 23; h++) {
+                const pct = (h / 24 * 100).toFixed(3) + '%';
+                tickHtml.push(`<div class="vtl-tick" style="top:${pct}">${String(h).padStart(2, '0')}</div>`);
+                barHtml.push(`<div class="vtl-line" style="top:${pct}"></div>`);
+            }
+
+            // Future zone
+            const nowPct = (nowMs / DAY_MS * 100).toFixed(3) + '%';
+            const futPct = ((DAY_MS - nowMs) / DAY_MS * 100).toFixed(3) + '%';
+            barHtml.push(`<div class="vtl-future" style="top:${nowPct};height:${futPct}"></div>`);
+
+            // Blocks and gaps
+            const GAP_MIN = 2 * 60 * 1000;
             const segs = [];
             let cursor = midnight.getTime();
-            const GAP_MIN = 2 * 60 * 1000; // only show gaps > 2 min
 
             for (const b of blocks) {
-                const bStart = new Date(b.start).getTime();
-                const bEnd = new Date(b.end).getTime();
-                // Clamp to today's range
-                const s2 = Math.max(bStart, midnight.getTime());
-                const e2 = Math.min(bEnd, now.getTime());
+                const s2 = Math.max(new Date(b.start).getTime(), midnight.getTime());
+                const e2 = Math.min(new Date(b.end).getTime(), now.getTime());
                 if (e2 <= midnight.getTime()) continue;
-
-                if (s2 - cursor > GAP_MIN) {
-                    segs.push({ type: 'gap', start: cursor, end: s2 });
-                }
-                if (e2 > s2) {
-                    segs.push({ type: 'block', cat: b.category, start: s2, end: e2 });
-                }
+                if (s2 - cursor > GAP_MIN) segs.push({ type: 'gap', start: cursor, end: s2 });
+                if (e2 > s2) segs.push({ type: 'block', cat: b.category, start: s2, end: e2 });
                 cursor = Math.max(cursor, e2);
             }
-            // Trailing gap to now
-            if (now.getTime() - cursor > GAP_MIN) {
-                segs.push({ type: 'gap', start: cursor, end: now.getTime() });
-            }
+            if (now.getTime() - cursor > GAP_MIN) segs.push({ type: 'gap', start: cursor, end: now.getTime() });
 
-            // Render blocks + gaps
-            track.innerHTML = segs.map(seg => {
-                const left = ((seg.start - midnight) / spanMs * 100).toFixed(3);
-                const width = ((seg.end - seg.start) / spanMs * 100).toFixed(3);
+            for (const seg of segs) {
+                const startMs = seg.start - midnight.getTime();
+                const durMs = seg.end - seg.start;
+                const top = (startMs / DAY_MS * 100).toFixed(3) + '%';
+                const ht = (durMs / DAY_MS * 100).toFixed(3) + '%';
+                const si = new Date(seg.start).toISOString();
+                const ei = new Date(seg.end).toISOString();
+                const dm = Math.round(durMs / 60000);
+                const tip = `${hhmm(si)}–${hhmm(ei)} · ${dm}m`;
                 if (seg.type === 'gap') {
-                    const s = new Date(seg.start).toISOString();
-                    const e = new Date(seg.end).toISOString();
-                    const durMin = Math.round((seg.end - seg.start) / 60000);
-                    return `<div class="tl-gap"
-        style="left:${left}%;width:${Math.max(width, 0.3)}%"
-        data-start="${s}" data-end="${e}" data-dur="${durMin}"
-        onmouseenter="showTip('${hhmm(s)} – ${hhmm(e)} · ${durMin}m gap',event.clientX,event.clientY)"
-        onmousemove="showTip('${hhmm(s)} – ${hhmm(e)} · ${durMin}m gap',event.clientX,event.clientY)"
-        onmouseleave="hideTip()"
-        onclick="openGapPopup(this)"></div>`;
+                    barHtml.push(`<div class="vtl-gap" style="top:${top};height:${ht}" data-start="${si}" data-end="${ei}" data-dur="${dm}" onmouseenter="showTip('${tip} gap',event.clientX,event.clientY)" onmousemove="showTip('${tip} gap',event.clientX,event.clientY)" onmouseleave="hideTip()" onclick="openGapPopup(this)"></div>`);
                 } else {
                     const st = cs(seg.cat);
-                    const durMin = Math.round((seg.end - seg.start) / 60000);
-                    const s = new Date(seg.start).toISOString();
-                    const e = new Date(seg.end).toISOString();
-                    return `<div class="tl-block"
-        style="left:${left}%;width:${Math.max(width, 0.3)}%;background:${st.c}"
-        onmouseenter="showTip('${seg.cat} · ${hhmm(s)} – ${hhmm(e)} · ${durMin}m',event.clientX,event.clientY)"
-        onmousemove="showTip('${seg.cat} · ${hhmm(s)} – ${hhmm(e)} · ${durMin}m',event.clientX,event.clientY)"
-        onmouseleave="hideTip()"></div>`;
+                    const pxH = durMs / DAY_MS * barH;
+                    const lbl = pxH >= 14 ? `<div class="vtl-block-label">${seg.cat}</div>` : '';
+                    barHtml.push(`<div class="vtl-block" style="top:${top};height:${ht};background:${st.c}" onmouseenter="showTip('${tip} · ${seg.cat}',event.clientX,event.clientY)" onmousemove="showTip('${tip} · ${seg.cat}',event.clientX,event.clientY)" onmouseleave="hideTip()">${lbl}</div>`);
                 }
-            }).join('');
-
-            // Hour ticks
-            const tickHtml = [];
-            for (let h = 0; h <= 23; h++) {
-                const tickTime = new Date(midnight); tickTime.setHours(h);
-                if (tickTime > now) break;
-                const left = ((tickTime - midnight) / spanMs * 100).toFixed(2);
-                if (parseFloat(left) > 97) continue; // don't crowd the right edge
-                tickHtml.push(`<span class="tl-tick" style="left:${left}%">${String(h).padStart(2, '0')}</span>`);
             }
-            ticks.innerHTML = tickHtml.join('');
 
-            // Label: tracked vs total
+            barHtml.push(`<div class="vtl-now" style="top:${nowPct}"></div>`);
+
+            labels.innerHTML = tickHtml.join('');
+            bar.innerHTML = barHtml.join('');
+
             const trackedMs = segs.filter(s => s.type === 'block').reduce((a, s) => a + (s.end - s.start), 0);
-            const trackedH = (trackedMs / 3600000).toFixed(1);
-            document.getElementById('tl-label').textContent = `${trackedH}h tracked`;
+            return (trackedMs / 3600000).toFixed(1);
         }
 
         // ── Gap popup ─────────────────────────────────────────────────────────────────
         function openGapPopup(el) {
-            const startIso = el.dataset.start;
-            const endIso = el.dataset.end;
-            const durMin = parseInt(el.dataset.dur) || 30;
-            popupTs = startIso;
-
-            document.getElementById('popup-range').textContent =
-                `${hhmm(startIso)} – ${hhmm(endIso)}`;
-            document.getElementById('p-dur').value = durMin;
+            popupTs = el.dataset.start;
+            document.getElementById('popup-range').textContent = `${hhmm(el.dataset.start)} – ${hhmm(el.dataset.end)}`;
+            document.getElementById('p-dur').value = el.dataset.dur;
             document.getElementById('p-note').value = '';
-
-            // Populate popup category select with all categories
             const sel = document.getElementById('p-cat');
             sel.innerHTML = '';
-            allCats.forEach(c => {
-                const o = document.createElement('option');
-                o.value = c; o.textContent = c;
-                sel.appendChild(o);
-            });
-
+            allCats.forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; sel.appendChild(o); });
             document.getElementById('popup-overlay').classList.add('show');
         }
-
         function closePopup(e) {
             if (e && e.target !== document.getElementById('popup-overlay')) return;
             document.getElementById('popup-overlay').classList.remove('show');
             popupTs = null;
         }
-
         async function submitPopup() {
             const cat = document.getElementById('p-cat').value;
             const dur = parseFloat(document.getElementById('p-dur').value);
             const note = document.getElementById('p-note').value.trim();
             if (!dur || dur <= 0) { toast('enter a duration'); return; }
-            const r = await fetch('/api/manual', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ category: cat, duration_s: dur * 60, note, ts: popupTs }),
-            });
-            if ((await r.json()).ok) {
-                document.getElementById('popup-overlay').classList.remove('show');
-                popupTs = null;
-                toast('logged ✓');
-                refresh();
-            }
+            const r = await fetch('/api/manual', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ category: cat, duration_s: dur * 60, note, ts: popupTs }) });
+            if ((await r.json()).ok) { document.getElementById('popup-overlay').classList.remove('show'); popupTs = null; toast('logged ✓'); refresh(); }
         }
 
         // ── Activity timer ────────────────────────────────────────────────────────────
-        let actStartTs = null;
-        let actTimerInt = null;
-
+        let actStartTs = null, actTimerInt = null;
         function startTimerTick() {
             if (actTimerInt) clearInterval(actTimerInt);
             actTimerInt = setInterval(() => {
                 if (!actStartTs) return;
-                const elapsed = Math.floor((Date.now() - new Date(actStartTs)) / 1000);
-                const m = Math.floor(elapsed / 60);
-                const s = elapsed % 60;
-                document.getElementById('act-timer').textContent =
-                    `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+                const e = Math.floor((Date.now() - new Date(actStartTs)) / 1000);
+                document.getElementById('act-timer').textContent = `${String(Math.floor(e / 60)).padStart(2, '0')}:${String(e % 60).padStart(2, '0')}`;
             }, 1000);
         }
-
         async function startActivity() {
             const raw = document.getElementById('m-cat').value.trim();
             if (!raw) { toast('enter an activity first'); return; }
             const cat = raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase();
             const ts = new Date().toISOString();
-            const r = await fetch('/api/activity/start', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ category: cat, ts }),
-            });
+            const r = await fetch('/api/activity/start', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ category: cat, ts }) });
             if (!(await r.json()).ok) return;
-
             actStartTs = ts;
             document.getElementById('act-idle').style.display = 'none';
             document.getElementById('act-active').style.display = 'block';
             const st = cs(cat);
-            document.getElementById('act-label-tag').innerHTML =
-                `<span class="tag" style="background:${st.b};color:${st.c}">${cat}</span>`;
+            document.getElementById('act-label-tag').innerHTML = `<span class="tag" style="background:${st.b};color:${st.c}">${cat}</span>`;
             startTimerTick();
         }
-
         async function endActivity() {
             const r = await fetch('/api/activity/end', { method: 'POST' });
             const data = await r.json();
-            if (data.ok) {
-                toast(`logged ${Math.round(data.duration_s / 60)}m of ${data.category} ✓`);
-                resetActivity();
-                refresh();
-            }
+            if (data.ok) { toast(`logged ${Math.round(data.duration_s / 60)}m of ${data.category} ✓`); resetActivity(); refresh(); }
         }
-
         async function cancelActivity() {
             await fetch('/api/activity/cancel', { method: 'POST' });
-            resetActivity();
-            toast('cancelled');
+            resetActivity(); toast('cancelled');
         }
-
         function resetActivity() {
-            actStartTs = null;
-            clearInterval(actTimerInt);
-            actTimerInt = null;
+            actStartTs = null; clearInterval(actTimerInt); actTimerInt = null;
             document.getElementById('act-idle').style.display = 'block';
             document.getElementById('act-active').style.display = 'none';
             document.getElementById('act-timer').textContent = '';
             document.getElementById('m-cat').value = '';
         }
-
         async function checkActivityStatus() {
             try {
-                const status = await fetch('/api/activity/status').then(r => r.json());
-                if (status.running && !actStartTs) {
-                    // Server thinks activity is running but UI doesn't — resync
-                    actStartTs = status.ts;
+                const s = await fetch('/api/activity/status').then(r => r.json());
+                if (s.running && !actStartTs) {
+                    actStartTs = s.ts;
                     document.getElementById('act-idle').style.display = 'none';
                     document.getElementById('act-active').style.display = 'block';
-                    const st = cs(status.category);
-                    document.getElementById('act-label-tag').innerHTML =
-                        `<span class="tag" style="background:${st.b};color:${st.c}">${status.category}</span>`;
+                    const st = cs(s.category);
+                    document.getElementById('act-label-tag').innerHTML = `<span class="tag" style="background:${st.b};color:${st.c}">${s.category}</span>`;
                     startTimerTick();
-                } else if (!status.running && actStartTs) {
-                    // Server stopped it (auto-stop) — reset UI and notify
-                    if (status.stopped_by === 'auto') {
-                        toast('activity auto-stopped — window switch detected');
-                    }
+                } else if (!s.running && actStartTs) {
+                    if (s.stopped_by === 'auto') toast('activity auto-stopped — window switch detected');
                     resetActivity();
                 }
-            } catch (e) { /* server unavailable */ }
+            } catch (e) { }
         }
 
         async function del(id, btn) {
             btn.closest('.fr').style.opacity = '0.3';
             await fetch(`/api/delete/${id}`, { method: 'DELETE' });
-            toast('deleted');
-            refresh();
+            toast('deleted'); refresh();
         }
-
         function exportCSV(days) { window.location.href = `/api/export?days=${days}`; }
 
-        // ── Refresh ───────────────────────────────────────────────────────────────────
         async function refresh() {
             try {
-                const [stats, events] = await Promise.all([
-                    get('/api/stats'),
-                    get(`/api/events?days=${currentTab === 'today' ? 1 : 7}`),
-                ]);
+                const [stats, events] = await Promise.all([get('/api/stats'), get(`/api/events?days=${currentTab === 'today' ? 1 : 7}`)]);
                 renderStats(stats);
                 renderFeed(events);
                 await renderTimeline();
                 await checkActivityStatus();
                 const now = new Date().toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit', hour12: false });
-                document.getElementById('last-up').textContent = `last updated ${now}`;
-                document.getElementById('sbar').textContent = `auto-polling every 30s · ${stats.totals.today_h}h tracked today`;
+                const trackedH = stats.totals.today_h;
+                document.getElementById('last-up').textContent = `updated ${now} · ${trackedH}h tracked today`;
             } catch (e) {
-                document.getElementById('last-up').textContent = 'server unavailable — is tracker.py running?';
+                document.getElementById('last-up').textContent = 'server unavailable';
             }
         }
 
-        // ── Init ──────────────────────────────────────────────────────────────────────
         async function init() {
             const cats = await get('/api/categories').catch(() => ({
                 auto: ["Work/Study", "Reading", "Reddit", "YouTube", "Facebook", "Instagram", "Twitter", "TikTok", "Browsing", "Messaging", "Admin", "Entertainment", "News", "Discord", "Other"],
                 manual: ["Messaging", "Reading", "Sleep", "Meal", "Admin", "Other"]
             }));
-
-            // All categories for gap popup (auto + manual, deduped)
             allCats = [...new Set([...cats.auto, ...cats.manual])];
-
-            // Also allow Enter key to start activity
-            document.getElementById('m-cat').addEventListener('keydown', e => {
-                if (e.key === 'Enter') startActivity();
-            });
-
+            document.getElementById('m-cat').addEventListener('keydown', e => { if (e.key === 'Enter') startActivity(); });
             refresh();
             setInterval(refresh, 30000);
         }
 
-        // Close popup on Escape
-        document.addEventListener('keydown', e => {
-            if (e.key === 'Escape') document.getElementById('popup-overlay').classList.remove('show');
-        });
-
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') document.getElementById('popup-overlay').classList.remove('show'); });
         init();
     </script>
 </body>

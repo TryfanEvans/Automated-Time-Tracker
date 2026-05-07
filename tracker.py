@@ -119,12 +119,176 @@ def _save_cache(cache: dict):
 _classify_cache = _load_cache()
 log.info("Loaded %d cached classifications", len(_classify_cache))
 
-def classify(app: str, title: str) -> str:
-    """Classify window title via Claude Haiku. Caches results to save API calls."""
+import re as _re
+import re
+
+# Browser app names as reported by ActivityWatch
+_BROWSER_APPS = {"brave", "chrome", "firefox", "chromium", "safari", "opera", "edge"}
+
+def parse_window(app: str, title: str, url: str | None = None):
+    """Split a window title into (content, site).
+
+    If a real URL is provided (from aw-watcher-web), extract the domain directly.
+    Otherwise fall back to parsing the title string.
+    """
+    from urllib.parse import urlparse
+
+    # Strip leading unread counts: "(2) Title..." -> "Title..."
+    clean = re.sub(r'^\(\d+\)\s*', '', title)
+
+    # Prefer real URL domain over title parsing
+    if url:
+        try:
+            host = urlparse(url).hostname or ""
+            site = host.removeprefix("www.")
+            # Strip trailing " - SiteName - BrowserName" and " - BrowserName" from title
+            page_title = clean
+            m = re.match(r'^(.*?) - [^-]+ - ' + re.escape(app) + r'$', clean, re.IGNORECASE)
+            if m:
+                page_title = m.group(1).strip()
+            else:
+                m = re.match(r'^(.*?) - ' + re.escape(app) + r'$', clean, re.IGNORECASE)
+                if m:
+                    page_title = m.group(1).strip()
+            return page_title, site if site else None
+        except Exception:
+            pass
+
+    if app.lower() in _BROWSER_APPS:
+        # Three-part: "Content - Site - AppName"
+        m = re.match(r'^(.*?) - ([^-]+) - ' + re.escape(app) + r'$', clean, re.IGNORECASE)
+        if m:
+            return m.group(1).strip(), m.group(2).strip()
+        # Two-part: "Content - AppName"
+        m = re.match(r'^(.*?) - ' + re.escape(app) + r'$', clean, re.IGNORECASE)
+        if m:
+            return m.group(1).strip(), None
+
+    return clean, None
+
+
+# Hard rules: site or app alone is sufficient -- no LLM needed.
+_HARD_RULES_SITE = {
+    # Social / entertainment -- always recreational
+    "instagram":        "Instagram",
+    "facebook":         "Facebook",
+    "twitter":          "Twitter",
+    "x.com":            "Twitter",
+    "tiktok":           "TikTok",
+    "netflix":          "Entertainment",
+    "netflix.com":      "Entertainment",
+    "spotify":          "Entertainment",
+    "open.spotify.com": "Entertainment",
+    "twitch":           "Entertainment",
+    "twitch.tv":        "Entertainment",
+    "primevideo.com":   "Entertainment",
+    # Study platforms -- always Work/Study
+    "updraft.cyfrin.io":  "Work/Study",
+    "cyfrin.io":          "Work/Study",
+    "udemy.com":          "Work/Study",
+    "coursera.org":       "Work/Study",
+    "edx.org":            "Work/Study",
+    "khanacademy.org":    "Work/Study",
+    "brilliant.org":      "Work/Study",
+    "leetcode.com":       "Work/Study",
+    "arxiv.org":          "Work/Study",
+    "github.com":         "Work/Study",
+    "stackoverflow.com":  "Work/Study",
+    "docs.anthropic.com": "Work/Study",
+    "claude.ai":          "Work/Study",
+    "app.claude.ai":      "Work/Study",
+    "chatgpt.com":        "Work/Study",
+    "gemini.google.com":  "Work/Study",
+}
+
+_HARD_RULES_APP = {
+    "code":           "Work/Study",   # VSCode reports as "Code"
+    "gnome-terminal": "Work/Study",
+    "terminal":       "Work/Study",
+    "konsole":        "Work/Study",
+    "kitty":          "Work/Study",
+    "alacritty":      "Work/Study",
+    "steam_app_0":    "Entertainment",
+    "heroic":         "Entertainment",
+    "zenity":         "Entertainment",
+}
+
+
+def _llm(prompt: str, fallback: str) -> str:
+    """Single LLM call, returns stripped response text or fallback on error."""
+    try:
+        msg = _client.messages.create(
+            model=MODEL,
+            max_tokens=16,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        return msg.content[0].text.strip()
+    except Exception as e:
+        log.error(f"LLM error: {e}")
+        return fallback
+
+
+def _is_work_study(content: str) -> str:
+    """Ask LLM if content is work/study related. Returns YES, NO, or UNSURE."""
+    raw = _llm(
+        f"Is this about programming, math, CS, EVM/blockchain, or academic study? "
+        f"Reply YES, NO, or UNSURE.\nTitle: {content}",
+        fallback="UNSURE"
+    ).upper()
+    if "YES" in raw:   return "YES"
+    if "NO"  in raw:   return "NO"
+    return "UNSURE"
+
+
+def _is_admin(content: str) -> str:
+    """Ask LLM if email/calendar content is administrative. Returns YES, NO, or UNSURE."""
+    raw = _llm(
+        f"Is this an administrative email or calendar event (signups, scheduling, uni admin, forms)? "
+        f"Reply YES, NO, or UNSURE.\nTitle: {content}",
+        fallback="UNSURE"
+    ).upper()
+    if "YES" in raw:   return "YES"
+    if "NO"  in raw:   return "NO"
+    return "UNSURE"
+
+
+def _is_news(content: str) -> str:
+    """Ask LLM if content is news (not tech/CS). Returns YES, NO, or UNSURE."""
+    raw = _llm(
+        f"Is this a news article about current events, politics, or world affairs (not CS/tech)? "
+        f"Reply YES, NO, or UNSURE.\nTitle: {content}",
+        fallback="UNSURE"
+    ).upper()
+    if "YES" in raw:   return "YES"
+    if "NO"  in raw:   return "NO"
+    return "UNSURE"
+
+
+def _general_classify(app: str, site: str | None, content: str) -> str:
+    """Full category classification for cases no targeted prompt covers."""
+    site_line = f"Site: {site}" if site else "Site: (none)"
+    raw = _llm(
+        f"Classify this computer activity into one category.\n"
+        f"App: {app}\n{site_line}\nContent: {content}\n"
+        f"Categories: {', '.join(AUTO_CATEGORIES)}\n"
+        f"Rules: Work/Study=code/math/CS/EVM/academic; Reading=book/paper PDF; "
+        f"Messaging=Discord DM/WhatsApp; Discord=Discord server; Admin=uni portal/calendar; "
+        f"Browsing=unrecognised web; Other=everything else.\n"
+        f"Reply with ONLY the category name.",
+        fallback="Other"
+    )
+    for cat in AUTO_CATEGORIES:
+        if cat.lower() in raw.lower():
+            return cat
+    return "Other"
+
+
+def classify(app: str, title: str, url: str | None = None) -> str:
+    """Parse window, apply hard rules, targeted yes/no prompts, fallback to general LLM."""
     if not _client:
         return "Other"
 
-    # Deterministic rules — no API call needed
+    # Tracker window -- deterministic
     combined = (app + " " + title).lower()
     if any(h in combined for h in TRACKER_WINDOW_HINTS):
         return "Admin"
@@ -133,80 +297,61 @@ def classify(app: str, title: str) -> str:
     if key in _classify_cache:
         return _classify_cache[key]
 
-    prompt = f"""Classify this computer activity into exactly one category.
-App: {app}
-Window title: {title}
+    content, site = parse_window(app, title, url)
+    site_lower = site.lower() if site else ""
 
-Categories: {", ".join(AUTO_CATEGORIES)}
+    # Hard rules -- site
+    if site:
+        rule = _HARD_RULES_SITE.get(site_lower)
+        if rule:
+            _classify_cache[key] = rule
+            _save_cache(_classify_cache)
+            log.info("[rule/site] %s -> %s", site, rule)
+            return rule
 
-Rules (apply in order — first match wins):
-
-1. WORK/STUDY — use this if ANY of the following are true:
-   - Content involves code, programming, math, algorithms, data structures, EVM, blockchain, formal verification, or computer science
-   - Title mentions Adelaide Uni, AUCPL, university coursework, or study groups
-   - App is VSCode, a terminal, an IDE, Jupyter, or similar coding tool
-   - Claude/ChatGPT/AI tool AND title suggests the topic is code, math, or study
-   - YouTube AND title suggests a coding tutorial, math lecture, or CS topic
-   - Reddit AND title suggests a programming or math subreddit/post
-   - PDF viewer or ebook app (also consider Reading below)
-   - News site AND content is clearly about code or technology
-
-2. READING — use this if:
-   - App is a PDF viewer (Evince, Okular, Adobe, browser with .pdf in title) AND content looks like a book, paper, or article
-   - Does NOT override Work/Study if the PDF is clearly study material — use Work/Study instead
-
-3. MESSAGING — use this if:
-   - Discord AND a username/person's name appears at the start of the title (DM pattern)
-   - WhatsApp Web, Messenger, Telegram Web, Signal Desktop
-   - Title pattern looks like "Username - Discord" or "Name | Messenger"
-
-4. DISCORD — use this if:
-   - App is Discord AND server name does NOT contain CS, study, programming, code, uni, university, or similar academic signals
-   - General Discord servers, gaming servers, friend groups
-
-5. ADMIN — use this if:
-   - Gmail AND email looks administrative (signups, forms, scheduling, uni admin)
-   - Google Calendar, forms, university portals
-   - Discord server name contains CS, Study, Programming, Uni, University, or similar
-   - Reddit AND title looks like a search or post about a specific admin task
-
-6. Per-site categories — use the site name if content is recreational:
-   - REDDIT — reddit.com, not work/study/admin
-   - YOUTUBE — youtube.com, not work/study
-   - FACEBOOK — facebook.com, not messaging
-   - INSTAGRAM — instagram.com
-   - TWITTER — twitter.com or x.com
-   - TIKTOK — tiktok.com
-
-7. ENTERTAINMENT — Netflix, Spotify, Steam, games, Twitch
-
-8. NEWS — news sites (ABC, BBC, Guardian, Reuters etc.) when content is not code/math
-
-9. BROWSING — any other unrecognised web browsing
-
-10. OTHER — everything else
-
-Reply with ONLY the category name, nothing else."""
-
-    try:
-        msg = _client.messages.create(
-            model=MODEL,
-            max_tokens=16,
-            messages=[{"role": "user", "content": prompt}],
-        )
-        raw = msg.content[0].text.strip()
-        result = "Other"
-        for cat in AUTO_CATEGORIES:
-            if cat.lower() in raw.lower():
-                result = cat
-                break
-        _classify_cache[key] = result
+    # Hard rules -- app
+    rule = _HARD_RULES_APP.get(app.lower())
+    if rule:
+        _classify_cache[key] = rule
         _save_cache(_classify_cache)
-        return result
-    except Exception as e:
-        log.error(f"Classification error: {e}")
-        return "Other"
+        log.info("[rule/app] %s -> %s", app, rule)
+        return rule
 
+    def _unsure(domain_default):
+        return "Work/Study" if _last_category == "Work/Study" else domain_default
+
+    # Targeted yes/no prompts
+    result = None
+
+    if site_lower == "youtube":
+        ans = _is_work_study(content)
+        result = "Work/Study" if ans == "YES" else ("YouTube" if ans == "NO" else _unsure("YouTube"))
+        log.info("[yn/youtube] %s -> %s (%s)", content[:50], result, ans)
+
+    elif site_lower in ("reddit", "reddit.com", "old.reddit.com", "www.reddit.com"):
+        ans = _is_work_study(content)
+        result = "Work/Study" if ans == "YES" else ("Reddit" if ans == "NO" else _unsure("Reddit"))
+        log.info("[yn/reddit] %s -> %s (%s)", content[:50], result, ans)
+
+    elif site_lower in ("gmail", "outlook", "mail"):
+        ans = _is_admin(content)
+        result = "Admin" if ans == "YES" else ("Browsing" if ans == "NO" else _unsure("Admin"))
+        log.info("[yn/mail] %s -> %s (%s)", content[:50], result, ans)
+
+    elif site_lower in ("bbc", "abc", "cnn", "guardian", "reuters", "nytimes",
+                        "mit technology review", "hacker news", "ars technica"):
+        ans = _is_news(content)
+        result = "News" if ans == "YES" else ("Work/Study" if ans == "NO" else _unsure("News"))
+        log.info("[yn/news] %s -> %s (%s)", content[:50], result, ans)
+
+    # Unknown site/app -- general classifier
+    if result is None:
+        result = _general_classify(app, site, content)
+        log.info("[general] %s -> %s", content[:50], result)
+
+    _classify_cache[key] = result
+    _save_cache(_classify_cache)
+    return result
 # ── ActivityWatch polling ──────────────────────────────────────────────────────
 _last_key      = None
 _last_category = "Other"
@@ -255,6 +400,28 @@ def auto_stop_activity(app: str, title: str):
     except Exception as e:
         log.error(f"Auto-stop write error: {e}")
 
+def _get_web_url() -> str | None:
+    """Return the current browser URL from aw-watcher-web, or None if unavailable."""
+    try:
+        r = requests.get(f"{AW_SERVER}/api/0/buckets", timeout=3)
+        if not r.ok:
+            return None
+        for bid in r.json():
+            if "aw-watcher-web" in bid:
+                r2 = requests.get(
+                    f"{AW_SERVER}/api/0/buckets/{bid}/events",
+                    params={"limit": 1},
+                    timeout=3,
+                )
+                if r2.ok:
+                    events = r2.json()
+                    if events:
+                        return events[0]["data"].get("url")
+    except Exception as e:
+        log.debug(f"AW web poll: {e}")
+    return None
+
+
 def get_current_window():
     try:
         r = requests.get(f"{AW_SERVER}/api/0/buckets", timeout=3)
@@ -271,7 +438,10 @@ def get_current_window():
                     events = r2.json()
                     if events:
                         d = events[0]["data"]
-                        return d.get("app", ""), d.get("title", "")
+                        app   = d.get("app", "")
+                        title = d.get("title", "")
+                        url   = _get_web_url() if app.lower() in _BROWSER_APPS else None
+                        return app, title, url
     except Exception as e:
         log.debug(f"AW poll: {e}")
     return None
@@ -345,7 +515,7 @@ def poll_loop():
             result = get_current_window()
 
             if result:
-                app, title = result
+                app, title, url = result
 
                 # Skip transient unknown windows (e.g. briefly after resume)
                 if not app and not title:
@@ -367,11 +537,17 @@ def poll_loop():
                     if act_running and not is_tracker_window(app, title):
                         auto_stop_activity(app, title)
 
-                    # Classify new window and insert a fresh row
-                    _last_category = classify(app, title)
+                    # Classify new window and insert a fresh row (skip tracker itself)
+                    _last_category = classify(app, title, url)
                     _last_key      = key
-                    row_id         = insert_window_row(app, title, _last_category, now)
                     last_checkpoint = now
+
+                    if is_tracker_window(app, title):
+                        row_id = None
+                        log.info("[skip] tracker window — no row inserted")
+                    else:
+                        row_id = insert_window_row(app, title, _last_category, now)
+                        log.info("[new] %s | %.55s → %s", app, title, _last_category)
 
                     with _window_lock:
                         _window_state["row_id"]   = row_id
@@ -379,8 +555,6 @@ def poll_loop():
                         _window_state["title"]    = title
                         _window_state["category"] = _last_category
                         _window_state["start_ts"] = now
-
-                    log.info("[new] %s | %.55s → %s", app, title, _last_category)
 
                 else:
                     # Same window — checkpoint every 5 min so crashes lose minimal data
@@ -448,11 +622,18 @@ DASHBOARD = Path(__file__).parent / "dashboard.html"
 def since(days):
     return (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
 
+def today_start():
+    """Midnight of the current local day as UTC ISO string."""
+    local_now = datetime.now().astimezone()  # timezone-aware in system local tz
+    local_midnight = local_now.replace(hour=0, minute=0, second=0, microsecond=0)
+    return local_midnight.astimezone(timezone.utc).isoformat()
+
 def week_start():
-    n = datetime.now(timezone.utc)
-    return (n - timedelta(days=n.weekday())).replace(
+    local_now = datetime.now().astimezone()  # timezone-aware in system local tz
+    local_monday = (local_now - timedelta(days=local_now.weekday())).replace(
         hour=0, minute=0, second=0, microsecond=0
-    ).isoformat()
+    )
+    return local_monday.astimezone(timezone.utc).isoformat()
 
 @flask_app.route("/")
 def index():
@@ -465,7 +646,7 @@ def api_events():
     rows = con.execute(
         "SELECT id,ts,source,app,title,category,duration_s,note "
         "FROM events WHERE ts>=? ORDER BY ts DESC LIMIT 400",
-        (since(days),),
+        (today_start() if days <= 1 else since(days),),
     ).fetchall()
     con.close()
     return jsonify([dict(r) for r in rows])
@@ -488,13 +669,18 @@ def api_stats():
             "SELECT ROUND(SUM(duration_s)/3600.0,2) FROM events WHERE ts>=?", (after,)
         ).fetchone()[0] or 0
 
+    def productive_h(after):
+        return con.execute(
+            "SELECT ROUND(SUM(duration_s)/3600.0,2) FROM events WHERE ts>=? AND category='Work/Study'", (after,)
+        ).fetchone()[0] or 0
+
     ws = week_start()
-    td = since(1)
+    td = today_start()
     result = {
         "today": totals_by_cat(td),
         "week":  totals_by_cat(ws),
         "totals": {
-            "today_h": total_h(td),
+            "today_h": productive_h(td),
             "week_h":  total_h(ws),
             "week_goal": WEEK_GOAL_H,
             "manual_today": con.execute(
@@ -562,6 +748,8 @@ def api_activity_cancel():
         _active_activity["ts"]         = None
         _active_activity["stopped_by"] = None
     return jsonify({"ok": True})
+
+@flask_app.route("/api/manual", methods=["POST"])
 def api_manual():
     data = request.json or {}
     cat  = data.get("category", "Other")
@@ -613,7 +801,7 @@ def api_export():
 @flask_app.route("/api/timeline")
 def api_timeline():
     """Return merged activity blocks for today (last 24h), sorted ascending."""
-    after = since(1)
+    after = today_start()
     con = get_db()
     rows = con.execute(
         "SELECT ts, category, source, duration_s "
