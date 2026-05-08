@@ -865,7 +865,8 @@
             <div class="popup-title">fill in gap</div>
             <div class="popup-range" id="popup-range">—</div>
             <div class="popup-row">
-                <div class="fl">CATEGORY</div><select id="p-cat"></select>
+                <div class="fl">CATEGORY</div><input id="p-cat" type="text" placeholder="running, sleep, meal…"
+                    autocomplete="off">
             </div>
             <div class="popup-row">
                 <div class="fl">DURATION (MINUTES)</div><input type="number" id="p-dur" min="1" max="720">
@@ -961,25 +962,31 @@
 
         // Drop blocks shorter than thresholdMs (absorbing their time into the previous
         // block), then merge any adjacent same-category blocks.
+        // Manual entries are never absorbed — they were explicitly placed by the user.
         function mergeSmallInterruptions(blocks, thresholdMs) {
             if (!blocks.length) return blocks;
 
-            // Pass 1: drop tiny blocks, extending the previous block to cover their time
+            // Pass 1: drop tiny blocks, extending the previous block to cover their time.
+            // Manual blocks are never absorbed AND never extended.
             const filtered = [];
             for (const b of blocks) {
                 const dur = new Date(b.end) - new Date(b.start);
-                if (dur < thresholdMs && filtered.length > 0) {
+                const prev = filtered[filtered.length - 1];
+                const prevIsManual = prev && prev.source === 'manual';
+                if (dur < thresholdMs && filtered.length > 0 && b.source !== 'manual' && !prevIsManual) {
                     filtered[filtered.length - 1] = { ...filtered[filtered.length - 1], end: b.end };
                 } else {
                     filtered.push({ ...b });
                 }
             }
 
-            // Pass 2: merge adjacent same-category blocks
+            // Pass 2: merge adjacent same-category blocks (only if gap < 5 minutes)
+            const MERGE_GAP_MS = 5 * 60 * 1000;
             const result = [];
             for (const b of filtered) {
                 const prev = result[result.length - 1];
-                if (prev && prev.category === b.category) {
+                const gap = prev ? new Date(b.start) - new Date(prev.end) : Infinity;
+                if (prev && prev.category === b.category && gap < MERGE_GAP_MS) {
                     result[result.length - 1] = { ...prev, end: b.end };
                 } else {
                     result.push({ ...b });
@@ -1064,10 +1071,8 @@
             popupTs = el.dataset.start;
             document.getElementById('popup-range').textContent = `${hhmm(el.dataset.start)} – ${hhmm(el.dataset.end)}`;
             document.getElementById('p-dur').value = el.dataset.dur;
+            document.getElementById('p-cat').value = '';
             document.getElementById('p-note').value = '';
-            const sel = document.getElementById('p-cat');
-            sel.innerHTML = '';
-            allCats.forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; sel.appendChild(o); });
             document.getElementById('popup-overlay').classList.add('show');
         }
         function closePopup(e) {
