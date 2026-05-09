@@ -68,7 +68,7 @@ def api_stats():
         "week":  totals_by_cat(ws),
         "totals": {
             "today_h":     productive_h(td),
-            "week_h":      total_h(ws),
+            "week_h":      productive_h(ws),
             "week_goal":   WEEK_GOAL_H,
             "manual_today": con.execute(
                 "SELECT COUNT(*) FROM events WHERE ts>=? AND source='manual'", (td,)
@@ -162,6 +162,30 @@ def api_manual():
     return jsonify({"ok": True})
 
 
+@flask_app.route("/api/update/<int:eid>", methods=["POST"])
+def api_update(eid):
+    data = request.json or {}
+    fields, values = [], []
+    if "category" in data:
+        fields.append("category=?"); fields.append("title=?")
+        values += [data["category"], data["category"]]
+    if "note" in data:
+        fields.append("note=?"); values.append(data["note"])
+    if "ts" in data:
+        fields.append("ts=?"); values.append(data["ts"])
+    if "duration_s" in data:
+        fields.append("duration_s=?"); values.append(float(data["duration_s"]))
+    if not fields:
+        return jsonify({"error": "nothing to update"}), 400
+    values.append(eid)
+    con = get_db()
+    con.execute(f"UPDATE events SET {', '.join(fields)} WHERE id=?", values)
+    con.commit()
+    con.close()
+    log.info("[update] row %d — %s", eid, data)
+    return jsonify({"ok": True})
+
+
 @flask_app.route("/api/delete/<int:eid>", methods=["DELETE"])
 def api_delete(eid):
     con = get_db()
@@ -200,7 +224,7 @@ def api_timeline():
     after = today_start()
     con   = get_db()
     rows  = con.execute(
-        "SELECT ts, category, source, duration_s "
+        "SELECT id, ts, category, source, duration_s, note "
         "FROM events WHERE ts >= ? ORDER BY ts ASC",
         (after,),
     ).fetchall()
@@ -225,14 +249,17 @@ def api_timeline():
             last     = blocks[-1]
             last_end = parse(last["end"])
             gap      = (ts - last_end).total_seconds()
-            if last["category"] == cat and gap <= GAP_S:
+            # Only merge auto blocks — manual blocks are always kept distinct
+            if last["category"] == cat and gap <= GAP_S and src == "auto" and last["source"] == "auto":
                 last["end"]        = end.isoformat()
                 last["duration_s"] += row["duration_s"]
                 continue
 
         blocks.append({
+            "id":         row["id"] if src == "manual" else None,
             "category":   cat,
             "source":     src,
+            "note":       row["note"] if src == "manual" else "",
             "start":      ts.isoformat(),
             "end":        end.isoformat(),
             "duration_s": float(row["duration_s"]),

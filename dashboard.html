@@ -216,6 +216,36 @@
             opacity: 0.85;
         }
 
+        .vtl-manual {
+            cursor: pointer;
+        }
+
+        .vtl-drag-handle {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 6px;
+            cursor: ns-resize;
+            z-index: 10;
+            background: rgba(255, 255, 255, 0.25);
+            opacity: 0;
+            transition: opacity .15s;
+        }
+
+        .vtl-manual:hover .vtl-drag-handle {
+            opacity: 1;
+        }
+
+        .vtl-drag-top {
+            top: 0;
+            border-radius: 3px 3px 0 0;
+        }
+
+        .vtl-drag-bot {
+            bottom: 0;
+            border-radius: 0 0 3px 3px;
+        }
+
         .vtl-block-label {
             font-size: 9px;
             font-weight: 600;
@@ -627,6 +657,16 @@
             opacity: 1;
         }
 
+        .btn-red {
+            background: #c0392b;
+            color: #fff;
+        }
+
+        .btn-red:hover {
+            background: #e74c3c;
+            opacity: 1;
+        }
+
         .empty {
             padding: 1.5rem;
             text-align: center;
@@ -862,13 +902,13 @@
     <!-- Popup -->
     <div class="popup-overlay" id="popup-overlay" onclick="closePopup(event)">
         <div class="popup">
-            <div class="popup-title">fill in gap</div>
+            <div class="popup-title" id="popup-title">fill in gap</div>
             <div class="popup-range" id="popup-range">—</div>
             <div class="popup-row">
                 <div class="fl">CATEGORY</div><input id="p-cat" type="text" placeholder="running, sleep, meal…"
                     autocomplete="off">
             </div>
-            <div class="popup-row">
+            <div class="popup-row" id="p-dur-row">
                 <div class="fl">DURATION (MINUTES)</div><input type="number" id="p-dur" min="1" max="720">
             </div>
             <div class="popup-row">
@@ -876,7 +916,8 @@
             </div>
             <div class="popup-btns">
                 <button class="btn btn-g" onclick="closePopup()">cancel</button>
-                <button class="btn" onclick="submitPopup()">+ log entry</button>
+                <button class="btn btn-red" id="p-delete" style="display:none" onclick="deleteEntry()">delete</button>
+                <button class="btn" id="p-submit" onclick="submitPopup()">+ log entry</button>
             </div>
         </div>
     </div>
@@ -1033,7 +1074,7 @@
                 const e2 = Math.min(new Date(b.end).getTime(), now.getTime());
                 if (e2 <= midnight.getTime()) continue;
                 if (s2 - cursor > GAP_MIN) segs.push({ type: 'gap', start: cursor, end: s2 });
-                if (e2 > s2) segs.push({ type: 'block', cat: b.category, start: s2, end: e2 });
+                if (e2 > s2) segs.push({ type: 'block', cat: b.category, source: b.source, id: b.id, note: b.note || '', start: s2, end: e2 });
                 cursor = Math.max(cursor, e2);
             }
             if (now.getTime() - cursor > GAP_MIN) segs.push({ type: 'gap', start: cursor, end: now.getTime() });
@@ -1053,7 +1094,12 @@
                     const st = cs(seg.cat);
                     const pxH = durMs / DAY_MS * barH;
                     const lbl = pxH >= 14 ? `<div class="vtl-block-label">${seg.cat}</div>` : '';
-                    barHtml.push(`<div class="vtl-block" style="top:${top};height:${ht};background:${st.c}" onmouseenter="showTip('${tip} · ${seg.cat}',event.clientX,event.clientY)" onmousemove="showTip('${tip} · ${seg.cat}',event.clientX,event.clientY)" onmouseleave="hideTip()">${lbl}</div>`);
+                    if (seg.source === 'manual' && seg.id) {
+                        const handles = `<div class="vtl-drag-handle vtl-drag-top" data-id="${seg.id}" data-edge="top"></div><div class="vtl-drag-handle vtl-drag-bot" data-id="${seg.id}" data-edge="bot"></div>`;
+                        barHtml.push(`<div class="vtl-block vtl-manual" style="top:${top};height:${ht};background:${st.c}" data-id="${seg.id}" data-cat="${seg.cat}" data-note="${seg.note}" data-start="${si}" data-end="${ei}" data-dur="${dm}" onmouseenter="showTip('${tip} · ${seg.cat}',event.clientX,event.clientY)" onmousemove="showTip('${tip} · ${seg.cat}',event.clientX,event.clientY)" onmouseleave="hideTip()" onclick="openEditPopup(this)">${lbl}${handles}</div>`);
+                    } else {
+                        barHtml.push(`<div class="vtl-block" style="top:${top};height:${ht};background:${st.c}" data-start="${si}" data-end="${ei}" onmouseenter="showTip('${tip} · ${seg.cat}',event.clientX,event.clientY)" onmousemove="showTip('${tip} · ${seg.cat}',event.clientX,event.clientY)" onmouseleave="hideTip()">${lbl}</div>`);
+                    }
                 }
             }
 
@@ -1067,27 +1113,179 @@
         }
 
         // ── Gap popup ─────────────────────────────────────────────────────────────────
+        let popupEditId = null;
+
         function openGapPopup(el) {
             popupTs = el.dataset.start;
+            popupEditId = null;
+            document.getElementById('popup-title').textContent = 'fill in gap';
             document.getElementById('popup-range').textContent = `${hhmm(el.dataset.start)} – ${hhmm(el.dataset.end)}`;
+            document.getElementById('p-dur-row').style.display = '';
             document.getElementById('p-dur').value = el.dataset.dur;
             document.getElementById('p-cat').value = '';
             document.getElementById('p-note').value = '';
+            document.getElementById('p-delete').style.display = 'none';
+            document.getElementById('p-submit').textContent = '+ log entry';
             document.getElementById('popup-overlay').classList.add('show');
         }
+
+        function openEditPopup(el) {
+            // Don't open if click came from a drag handle
+            if (event.target.classList.contains('vtl-drag-handle')) return;
+            popupTs = el.dataset.start;
+            popupEditId = parseInt(el.dataset.id);
+            document.getElementById('popup-title').textContent = 'edit entry';
+            document.getElementById('popup-range').textContent = `${hhmm(el.dataset.start)} – ${hhmm(el.dataset.end)}`;
+            document.getElementById('p-dur-row').style.display = 'none';
+            document.getElementById('p-cat').value = el.dataset.cat;
+            document.getElementById('p-note').value = el.dataset.note || '';
+            document.getElementById('p-delete').style.display = '';
+            document.getElementById('p-submit').textContent = 'save changes';
+            document.getElementById('popup-overlay').classList.add('show');
+        }
+
         function closePopup(e) {
             if (e && e.target !== document.getElementById('popup-overlay')) return;
             document.getElementById('popup-overlay').classList.remove('show');
             popupTs = null;
+            popupEditId = null;
         }
+
+        async function deleteEntry() {
+            if (!popupEditId) return;
+            await fetch(`/api/delete/${popupEditId}`, { method: 'DELETE' });
+            document.getElementById('popup-overlay').classList.remove('show');
+            popupTs = null; popupEditId = null;
+            toast('deleted'); refresh();
+        }
+
         async function submitPopup() {
-            const cat = document.getElementById('p-cat').value;
-            const dur = parseFloat(document.getElementById('p-dur').value);
+            const cat = document.getElementById('p-cat').value.trim();
             const note = document.getElementById('p-note').value.trim();
-            if (!dur || dur <= 0) { toast('enter a duration'); return; }
-            const r = await fetch('/api/manual', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ category: cat, duration_s: dur * 60, note, ts: popupTs }) });
-            if ((await r.json()).ok) { document.getElementById('popup-overlay').classList.remove('show'); popupTs = null; toast('logged ✓'); refresh(); }
+            if (!cat) { toast('enter a category'); return; }
+
+            if (popupEditId) {
+                // Edit existing entry
+                const r = await fetch(`/api/update/${popupEditId}`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ category: cat, note })
+                });
+                if ((await r.json()).ok) {
+                    document.getElementById('popup-overlay').classList.remove('show');
+                    popupTs = null; popupEditId = null;
+                    toast('saved ✓'); refresh();
+                }
+            } else {
+                // New gap fill
+                const dur = parseFloat(document.getElementById('p-dur').value);
+                if (!dur || dur <= 0) { toast('enter a duration'); return; }
+                const r = await fetch('/api/manual', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ category: cat, duration_s: dur * 60, note, ts: popupTs })
+                });
+                if ((await r.json()).ok) {
+                    document.getElementById('popup-overlay').classList.remove('show');
+                    popupTs = null; toast('logged ✓'); refresh();
+                }
+            }
         }
+
+        // ── Drag to resize manual blocks ──────────────────────────────────────────────
+        (function () {
+            let drag = null;
+
+            document.addEventListener('mousedown', e => {
+                const handle = e.target.closest('.vtl-drag-handle');
+                if (!handle) return;
+                e.preventDefault();
+                e.stopPropagation();
+                const block = handle.closest('.vtl-manual');
+                const bar = document.getElementById('tl-bar');
+                document.body.style.cursor = 'ns-resize';
+                document.body.style.userSelect = 'none';
+                bar.style.pointerEvents = 'none';
+                const barRect = bar.getBoundingClientRect();
+                const DAY_MS = 86400000;
+                const now = new Date();
+                const midnight = new Date(now); midnight.setHours(0, 0, 0, 0);
+
+                drag = {
+                    id: parseInt(block.dataset.id),
+                    edge: handle.dataset.edge,
+                    block,
+                    bar,
+                    barRect,
+                    DAY_MS,
+                    midnight,
+                    startMs: new Date(block.dataset.start).getTime(),
+                    endMs: new Date(block.dataset.end).getTime(),
+                    // Find adjacent block boundaries
+                    prevEnd: null,
+                    nextStart: null,
+                };
+
+                // Find adjacent hard boundaries from DOM — skip gaps (free space)
+                const allBlocks = [...bar.querySelectorAll('.vtl-block, .vtl-gap')];
+                const idx = allBlocks.indexOf(block);
+                for (let i = idx - 1; i >= 0; i--) {
+                    const b = allBlocks[i];
+                    if (b.classList.contains('vtl-gap')) continue;
+                    if (b.dataset.end) { drag.prevEnd = new Date(b.dataset.end).getTime(); break; }
+                }
+                for (let i = idx + 1; i < allBlocks.length; i++) {
+                    const b = allBlocks[i];
+                    if (b.classList.contains('vtl-gap')) continue;
+                    if (b.dataset.start) { drag.nextStart = new Date(b.dataset.start).getTime(); break; }
+                }
+            });
+
+            document.addEventListener('mousemove', e => {
+                if (!drag) return;
+                const { barRect, DAY_MS, midnight, startMs, endMs } = drag;
+                const pct = (e.clientY - barRect.top) / barRect.height;
+                const snapMs = Math.round(pct * DAY_MS / 60000) * 60000; // snap to minute
+                const tsMs = midnight.getTime() + snapMs;
+
+                const MIN_DUR = 60000; // 1 minute minimum
+                if (drag.edge === 'top') {
+                    const lo = drag.prevEnd !== null ? drag.prevEnd : midnight.getTime();
+                    const hi = endMs - MIN_DUR;
+                    const newStart = Math.max(lo, Math.min(hi, tsMs));
+                    const newDurMs = endMs - newStart;
+                    const newTop = ((newStart - midnight.getTime()) / DAY_MS * 100).toFixed(3) + '%';
+                    const newHt = (newDurMs / DAY_MS * 100).toFixed(3) + '%';
+                    drag.block.style.top = newTop;
+                    drag.block.style.height = newHt;
+                    drag.pendingStart = new Date(newStart).toISOString();
+                    drag.pendingDur = newDurMs / 1000;
+                } else {
+                    const lo = startMs + MIN_DUR;
+                    const hi = drag.nextStart !== null ? drag.nextStart : new Date().getTime();
+                    const newEnd = Math.max(lo, Math.min(hi, tsMs));
+                    const newDurMs = newEnd - startMs;
+                    const newHt = (newDurMs / DAY_MS * 100).toFixed(3) + '%';
+                    drag.block.style.height = newHt;
+                    drag.pendingDur = newDurMs / 1000;
+                }
+            });
+
+            document.addEventListener('mouseup', async e => {
+                if (!drag) return;
+                document.body.style.cursor = '';
+                document.body.style.userSelect = '';
+                drag.bar.style.pointerEvents = '';
+                const { id, pendingStart, pendingDur } = drag;
+                drag = null;
+                if (!pendingDur) return;
+                const body = { duration_s: pendingDur };
+                if (pendingStart) body.ts = pendingStart;
+                await fetch(`/api/update/${id}`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                toast('updated ✓'); refresh();
+            });
+        })();
 
         // ── Activity timer ────────────────────────────────────────────────────────────
         let actStartTs = null, actTimerInt = null;
