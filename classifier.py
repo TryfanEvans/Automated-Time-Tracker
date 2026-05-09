@@ -66,6 +66,7 @@ _HARD_RULES_SITE = {
     "leetcode.com":       "Work/Study",
     "arxiv.org":          "Work/Study",
     "github.com":         "Work/Study",
+    "stackoverflow.com":  "Work/Study",
     "docs.anthropic.com": "Work/Study",
 }
 
@@ -227,24 +228,30 @@ def classify(app: str, title: str, url: str | None = None, last_category: str = 
 
     result = None
 
+    was_unsure = False
+
     if site_lower == "youtube":
         ans = _is_work_study(content)
+        was_unsure = ans == "UNSURE"
         result = "Work/Study" if ans == "YES" else ("YouTube" if ans == "NO" else _unsure("YouTube"))
         log.info("[yn/youtube] %s -> %s (%s)", content[:50], result, ans)
 
     elif site_lower in ("reddit", "reddit.com", "old.reddit.com", "www.reddit.com"):
         ans = _is_work_study(content)
+        was_unsure = ans == "UNSURE"
         result = "Work/Study" if ans == "YES" else ("Reddit" if ans == "NO" else _unsure("Reddit"))
         log.info("[yn/reddit] %s -> %s (%s)", content[:50], result, ans)
 
     elif site_lower in ("gmail", "outlook", "mail"):
         ans = _is_admin(content)
+        was_unsure = ans == "UNSURE"
         result = "Admin" if ans == "YES" else ("Browsing" if ans == "NO" else _unsure("Admin"))
         log.info("[yn/mail] %s -> %s (%s)", content[:50], result, ans)
 
     elif site_lower in ("bbc", "abc", "cnn", "guardian", "reuters", "nytimes",
                         "mit technology review", "hacker news", "ars technica"):
         ans = _is_news(content)
+        was_unsure = ans == "UNSURE"
         result = "News" if ans == "YES" else ("Work/Study" if ans == "NO" else _unsure("News"))
         log.info("[yn/news] %s -> %s (%s)", content[:50], result, ans)
 
@@ -252,6 +259,9 @@ def classify(app: str, title: str, url: str | None = None, last_category: str = 
         result = _general_classify(app, site, content)
         log.info("[general] %s -> %s", content[:50], result)
 
-    _classify_cache[key] = result
-    _save_cache(_classify_cache)
+    if not was_unsure:
+        _classify_cache[key] = result
+        _save_cache(_classify_cache)
+    else:
+        log.info("[no-cache] UNSURE result not cached for: %s", key[:60])
     return result
