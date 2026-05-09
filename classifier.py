@@ -139,7 +139,7 @@ def _llm(prompt: str, fallback: str) -> str:
 
 def _is_work_study(content: str) -> str:
     raw = _llm(
-        f"Is this about programming, math, CS, EVM/blockchain, or academic study? "
+        f"Is this about programming, math, CS, EVM/blockchain, IT, or academic study? "
         f"Reply YES, NO, or UNSURE.\nTitle: {content}",
         fallback="UNSURE"
     ).upper()
